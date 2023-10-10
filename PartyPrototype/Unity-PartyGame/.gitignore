@@ -90,6 +90,7 @@ ExportedObj/
 *.compute
 *.inputactions
 *.playable
+*.ai
 
 
 # Unity3D generated meta files
