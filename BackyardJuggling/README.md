@@ -1,3 +1,3 @@
 # Android soccer juggling game
 
-![Screenshot](/Soccer_Screenshot.jpg)
+![Screenshot](/BackyardJuggling/Soccer_Screenshot.jpg)
