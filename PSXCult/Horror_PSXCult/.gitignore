@@ -52,6 +52,7 @@ ExportedObj/
 # Custom
 
 *.jpg
+*.jpeg
 *.anim
 *.mat
 *.prefab
@@ -72,25 +73,21 @@ ExportedObj/
 *.renderTexture
 *.json
 *.txt
-*.tif
-*.jpeg
 *.mp3
+*.pdf
 *.obj
 *.shader
-*.shadergraph
+*.tif
+*.xcf
 *.otf
-*.aiff
-*.cginc
-*.pdf
-*.terrainlayer
-*.graph
-*.blend
-*.blend1
 *.mtl
-*.compute
-*.inputactions
-*.playable
-*.ai
+*.terrainlayer
+*.cginc
+*.aiff
+*.dae
+*.blend
+*.shadergraph
+
 
 
 # Unity3D generated meta files
