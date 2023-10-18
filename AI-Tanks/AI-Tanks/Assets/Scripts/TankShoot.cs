@@ -10,26 +10,23 @@ public class TankShoot : MonoBehaviour
     AudioSource audioSource;
     TankData data;
     bool canFire;
+    float fireTime;
     void Start() {
         canFire = true;
         audioSource = gameObject.GetComponent<AudioSource>();
         data = gameObject.GetComponent<TankData>();
     }
     void Update() {
-        //Debug.Log(gameObject.name + canFire);
+        if(Time.time - fireTime >= data.shootReloadTimer){
+            canFire = true;
+        }
     }
     public void FireShell() {
-        StartCoroutine(FireShellAndWait());
-    }
-    IEnumerator FireShellAndWait() {
         canFire = false;
+        fireTime = Time.time;
         Rigidbody shell = Instantiate(shellRound, firePointTF.position, firePointTF.rotation);
-        //  ForceMode.Impulse applies instant force using its mass
-        shell.AddForce(firePointTF.forward + -(firePointTF.up * data.shellSpeed) / 3, ForceMode.Impulse);
+        shell.AddForce(firePointTF.forward * data.shellSpeed, ForceMode.Impulse); // Impulse: Apply instant force using mass
         audioSource.Play();
-        //yield return new WaitForSecondsRealtime(3f);
-        canFire = true;
-        yield return null;
     }
     public bool ReturnCanFireStatus() {
         return canFire;

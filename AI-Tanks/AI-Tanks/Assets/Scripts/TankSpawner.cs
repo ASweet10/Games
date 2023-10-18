@@ -7,16 +7,12 @@ public class TankSpawner : MonoBehaviour
 {
     GameObject playerTank;
     [SerializeField] GameObject waypointPrefab;
-    [SerializeField] Transform[] EnemyTanks;
+    [SerializeField] GameObject BomberAI;
+    [SerializeField] GameObject AggressiveAI;
+    [SerializeField] GameObject HunterAI;
+    [SerializeField] GameObject[] EnemyTanks;
     [SerializeField] List<GameObject> SpawnPoints;
     [SerializeField] List<Transform> GeneratedWaypoints;
-    [SerializeField] float playerRespawnTime = 3f;
-
-    [Header("Start Menu Scene")]
-    [SerializeField] GameObject menuTankA;
-    [SerializeField] GameObject menuTankB;
-    [SerializeField] Transform menuTankASpawnPoint;
-    [SerializeField] Transform menuTankBSpawnPoint;
 
     void Start() {
         playerTank = GameObject.FindGameObjectWithTag("PlayerOneTank");
@@ -37,47 +33,41 @@ public class TankSpawner : MonoBehaviour
         playerTank.SetActive(true);
 
         // Spawn enemies
-        foreach(Transform enemy in EnemyTanks) {
+        foreach(GameObject enemy in EnemyTanks) {
             randomSpawnIndex = UnityEngine.Random.Range(0, SpawnPoints.Count);
             Transform enemySpawn = SpawnPoints[randomSpawnIndex].transform;
             enemy.transform.position = enemySpawn.position;
             SpawnWaypoints(enemy.transform.position);
-            enemy.gameObject.SetActive(true);
-            Debug.Log(enemy.gameObject.name);
+            enemy.SetActive(true);
+            Debug.Log(enemy.name);
             SpawnPoints.Remove(SpawnPoints[randomSpawnIndex]);
         }
     }
 
-    public void RespawnPlayer() {
-        StartCoroutine(WaitForRespawnTimer());
-        SpawnPoints = new List<GameObject>(GameObject.FindGameObjectsWithTag("TankSpawnPoint"));
-        Transform playerSpawn = SpawnPoints[UnityEngine.Random.Range(0, SpawnPoints.Count)].transform;
-        playerTank.transform.position = playerSpawn.position + new Vector3(0, 0.5f, 0);
-        playerTank.SetActive(true);
-        //TankHealth health = playerTank.GetComponent<TankHealth>();
-        //health.ResetHealth();
-    }
-
-    public void HandleEnemyRespawn(GameObject tankToRespawn) {
-        StartCoroutine(WaitForRespawnTimer());
+    public void HandleEnemyRespawn(string tankToRespawn) {
         SpawnPoints = new List<GameObject>(GameObject.FindGameObjectsWithTag("TankSpawnPoint"));
         Transform enemySpawn = SpawnPoints[UnityEngine.Random.Range(0, SpawnPoints.Count)].transform; // Randomize spawn point
-
-        tankToRespawn.transform.position = enemySpawn.position + new Vector3(0, 0.5f, 0);
-
-        // Reset waypoints before respawning
-        GameObject[] waypointArray = GameObject.FindGameObjectsWithTag("PatrolWaypoint");
-        foreach (GameObject waypoint in waypointArray) {
-            Destroy(waypoint);
+        SpawnWaypoints(enemySpawn.position);
+        switch (tankToRespawn){
+            case "BomberAI":
+                BomberAI.SetActive(false);
+                BomberAI.transform.position = enemySpawn.position + new Vector3(0, 0.5f, 0);
+                BomberAI.SetActive(true);
+                break;
+            case "HunterAI":
+                HunterAI.SetActive(false);
+                HunterAI.transform.position = enemySpawn.position + new Vector3(0, 0.5f, 0);
+                HunterAI.SetActive(true);
+                break;
+            case "AggressiveAI":
+                AggressiveAI.SetActive(false);
+                AggressiveAI.transform.position = enemySpawn.position + new Vector3(0, 0.5f, 0);
+                AggressiveAI.SetActive(true);
+                break;
+            default:
+                break;
         }
-
-        SpawnWaypoints(tankToRespawn.transform.position);
-        tankToRespawn.SetActive(true);
     }
-    IEnumerator WaitForRespawnTimer() {
-        yield return new WaitForSecondsRealtime(playerRespawnTime); 
-    }
-
     void SpawnWaypoints(Vector3 patrolSpawnpoint) {
         //Spawn waypoints in the corners of the room AI is spawned in
         GameObject waypointOne = Instantiate(waypointPrefab, patrolSpawnpoint + new Vector3(15, 0, 15), Quaternion.identity);

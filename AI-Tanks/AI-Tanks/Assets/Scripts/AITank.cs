@@ -6,7 +6,7 @@ using UnityEngine;
 [RequireComponent (typeof(TankData))]
 public class AITank : MonoBehaviour
 {
-    public Transform target;
+    [SerializeField] Transform target;
     TankData data;
     TankMotor motor;
     TankHealth health;
@@ -26,12 +26,12 @@ public class AITank : MonoBehaviour
     float closeEnoughToWP = 3f;
     float avoidanceTime = 2f;
     float exitTime;
-    LayerMask playerLayerMask;
+    [SerializeField] GameObject[] strafePoints;
 
-    public enum AIType{StartMenuA, StartMenuB, Bomber, Normal, Aggressive};
-    public AIType aiType = AIType.Normal;
-    public enum State{patrol, chaseandshoot, strafe, chase, flee, rest, seekingPowerup};
-    public State state = State.patrol;
+    enum AIType{StartMenuA, StartMenuB, Bomber, Normal, Aggressive};
+    [SerializeField] AIType aiType = AIType.Normal;
+    enum State{patrol, chaseandshoot, strafe, chase, flee, rest, seekingPowerup};
+    [SerializeField] State state = State.patrol;
 
     void Start() {
         data = gameObject.GetComponent<TankData>();
@@ -42,15 +42,12 @@ public class AITank : MonoBehaviour
         target = GameObject.FindGameObjectWithTag("PlayerOneTank").transform;
         tankSpawner = GameObject.FindGameObjectWithTag("GameController").GetComponent<TankSpawner>();
         waypoints = tankSpawner.ReturnWaypoints().ToArray();
-        playerLayerMask = LayerMask.GetMask("PlayerLayer");
     }
     void Update() {
         target = FindTarget();
         HandleAIBehavior();
-        //Debug.Log(state);
-        //Debug.Log(target.position);
     }
-    public void AvoidTarget() {
+    void AvoidTarget() {
         if(avoidanceStage == 1) {
             motor.RotateTank(-1 * data.turnSpeed); //Rotate left
             if(CanMove(data.moveSpeed)) {
@@ -85,14 +82,10 @@ public class AITank : MonoBehaviour
                 }
             }
             lastState = State.chase;
-
-            if(aiType == AIType.Bomber || aiType == AIType.Normal) {
-                if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { // If hp < 50%...
-                    ChangeState(State.flee);
-                }
+            if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { // If hp < 50%...
+                ChangeState(State.flee);
             }
-            // If player within range...
-            if(Vector3.Distance(transform.position, target.position) <= aiRadius) {
+            if(Vector3.Distance(transform.position, target.position) <= aiRadius) { // If player within range...
                 ChangeState(State.chaseandshoot);
             }
             if(PowerupInRange() != null) {
@@ -105,21 +98,24 @@ public class AITank : MonoBehaviour
                 AvoidTarget();
             } else {
                 if(shoot.ReturnCanFireStatus()) {
-                    shoot.FireShell();
-                    //ChangeState(State.strafe);
+                    RaycastHit hit;
+                    if(Physics.Raycast(transform.position, transform.forward, out hit, 10f)) {
+                        if(hit.collider.CompareTag("PlayerOneTank")) {
+                            shoot.FireShell();
+                        }
+                    }
+                } else {
+                    ChangeState(State.strafe);
                 }
                 if(target != null){
                     ChaseTarget();
                 } else {
                     ChangeState(State.patrol);
                 }
-
             }
             lastState = State.chaseandshoot;
-            if(aiType == AIType.Bomber || aiType == AIType.Normal) {
-                if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { //If hp < 50%...
-                    ChangeState(State.flee);
-                }
+            if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { //If hp < 50%...
+                ChangeState(State.flee);
             }
             if(PowerupInRange() != null){
                 powerupToSeek = PowerupInRange();
@@ -129,15 +125,15 @@ public class AITank : MonoBehaviour
         else if(state == State.strafe) {
             if(avoidanceStage != 0) {
                 AvoidTarget();
+            } else {
+                HandleStrafe();
             }
             lastState = State.strafe;
-
-            if(aiType == AIType.Bomber || aiType == AIType.Normal) {
-                if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { //If hp < 50%...
-                    ChangeState(State.flee);
-                }
+            if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { //If hp < 50%...
+                ChangeState(State.flee);
             }
             if(shoot.ReturnCanFireStatus()) {
+                ChangeState(State.chaseandshoot);
             }
             if(PowerupInRange() != null){
                 powerupToSeek = PowerupInRange();
@@ -151,40 +147,14 @@ public class AITank : MonoBehaviour
                 HandlePatrol();
             }
             lastState = State.patrol;
-
-            if(aiType == AIType.Bomber || aiType == AIType.Normal) {
-                if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { // If hp < 50%
-                    ChangeState(State.flee);
-                }
-                if(Physics.CheckSphere(transform.position, aiRadius, playerLayerMask)) {
-                    Debug.Log("saw player");
-                    ChangeState(State.chaseandshoot);
-                }
-                /*
-                RaycastHit hit;
-                if(Physics.Raycast(transform.position, transform.forward, out hit, 10f)) {
-                    if(hit.collider.CompareTag("PlayerOneTank")) {
-                        ChangeState(State.chaseandshoot);
-                    }
-                }
-                */
-                if(Time.time >= stateEnterTime + 10 && hitWaypoint == false) {
-                    ChangeState(State.chase);
-                }
+            if(health.ReturnCurrentHealth() < data.maxHealth * 0.5f) { // If hp < 50%
+                ChangeState(State.flee);
             }
-            else if(aiType == AIType.Aggressive) {
-                if(Physics.CheckSphere(transform.position, aiRadius, playerLayerMask)) {
-                    Debug.Log("saw player");
-                    ChangeState(State.chaseandshoot);
-                }
-                /*
-                RaycastHit hit;
-                if(Physics.Raycast(transform.position, transform.forward, out hit, 10f)) {
-                    if(hit.collider.CompareTag("PlayerOneTank")) {
-                        ChangeState(State.chaseandshoot);
-                    }
-                }
-                */
+            if(Time.time >= stateEnterTime + 10 && hitWaypoint == false) {
+                ChangeState(State.chase);
+            }
+            if(Vector3.Distance(transform.position, target.position) <= aiRadius) { // If player within range...
+                ChangeState(State.chaseandshoot);
             }
             if(PowerupInRange() != null) {
                 powerupToSeek = PowerupInRange();
@@ -195,11 +165,11 @@ public class AITank : MonoBehaviour
             if(avoidanceStage != 0) {
                 AvoidTarget();
             } else {
-                GoToPowerup(powerupToSeek);
-                Debug.Log(gameObject.name + "seeking powerup");
-            }
-            if(powerupToSeek == null) {
-                ChangeState(lastState); //Resume prior state if powerup gone
+                if(powerupToSeek != null){
+                    GoToPowerup(powerupToSeek);
+                } else {
+                    ChangeState(lastState); // Powerup gone; resume prior behavior
+                }
             }
         }
         else if(state == State.flee) {
@@ -215,6 +185,8 @@ public class AITank : MonoBehaviour
                 } else {
                     ChangeState(State.rest);
                 }
+            } else {
+                Flee();
             }
         }
         else if(state == State.rest) {
@@ -242,7 +214,7 @@ public class AITank : MonoBehaviour
         return null;
     }
 
-    public void GoToPowerup(GameObject powerup) {
+    void GoToPowerup(GameObject powerup) {
         motor.RotateTowardsWP(powerup.transform.position);
         if(CanMove(data.moveSpeed)) { //Can we move (data.MoveSpeed) units away?
             motor.MoveTank(data.moveSpeed);
@@ -252,7 +224,7 @@ public class AITank : MonoBehaviour
         }
     }
 
-    public void ChangeState(State newState) {
+    void ChangeState(State newState) {
         state = newState;
         stateEnterTime = Time.time;
     }
@@ -266,20 +238,7 @@ public class AITank : MonoBehaviour
         return true; //Otherwise, can move
     }
 
-    public void SetCurrentWaypoint() { // Called when tank goes from chasing -> patrolling
-        Transform closestWP;
-        foreach(Transform wp in waypoints) { // Find wp closest to tank
-            float distance = Mathf.Infinity; //Start at high value and work backwards
-            Vector3 diff = wp.transform.position - transform.position;
-            float curDistance = diff.sqrMagnitude;
-            if(curDistance < distance) {
-                closestWP = wp;
-                currentWP = System.Array.IndexOf(waypoints, wp);
-                distance = curDistance;
-            }
-        }
-    }
-    public Transform FindTarget() {
+    Transform FindTarget() {
         GameObject playerOneRef = GameObject.FindGameObjectWithTag("PlayerOneTank");
         if(playerOneRef == null) {
             return null;
@@ -287,7 +246,7 @@ public class AITank : MonoBehaviour
             return playerOneRef.transform;
         }
     }
-    public void ChaseTarget() {
+    void ChaseTarget() {
         motor.RotateTowardsWP(target.position);
         if(CanMove(data.moveSpeed)) {   // Can we move (data.MoveSpeed) units away?
             motor.MoveTank(data.moveSpeed);
@@ -295,9 +254,9 @@ public class AITank : MonoBehaviour
             avoidanceStage = 1; // Obstacle avoidance stage 1
         }
     }
-    public void HandlePatrol() {
-        if (motor.RotateTowardsWP(waypoints[currentWP].position) == false) { //Tank unable to rotate?
-            motor.MoveTank(data.aiPatrolMoveSpeed); //Move tank
+    void HandlePatrol() {
+        if (motor.RotateTowardsWP(waypoints[currentWP].position) == false) { // Tank unable to rotate?
+            motor.MoveTank(data.aiPatrolMoveSpeed); // Move tank
         }
 
         if(Vector3.Distance(waypoints[currentWP].position, transform.position) < closeEnoughToWP) {
@@ -310,7 +269,14 @@ public class AITank : MonoBehaviour
             hitWaypoint = false;
         }
     }
-    public void Flee() {
+    void HandleStrafe() {
+        if (motor.RotateTowardsWP(strafePoints[Random.Range(0, strafePoints.Length)].transform.position) == false) { // Tank unable to rotate?
+            motor.MoveTank(data.aiPatrolMoveSpeed); // Move tank
+        } else {
+            motor.RotateTank(data.maxTurnSpeed);
+        }
+    }
+    void Flee() {
         Vector3 vectorToTarget = target.position - transform.position; // Vector from this object to target
         Vector3 vectorAwayFromTarget = vectorToTarget * -1; // Flip vector away from target
         vectorAwayFromTarget.Normalize(); // Give vector magnitude of 1

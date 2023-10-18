@@ -11,7 +11,6 @@ public class PowerupController : MonoBehaviour
     [SerializeField] float newTurnSpeed = 150f;
     [SerializeField] float damageModifier = 2f;
     [SerializeField] float fireRateModifier = 2f;
-    [SerializeField] float duration;
     TankData data;
     TankHealth health;
     Armor armor;
@@ -28,35 +27,33 @@ public class PowerupController : MonoBehaviour
         oldTurnSpeed = data.maxTurnSpeed;
     }
     void Update() {
-        if(!canGrabPowerup) {
-            CheckForPowerupCooldown();
-        }
+        CheckForPowerupCooldown();
     }
     public void GainPowerup(string powerup) {
         canGrabPowerup = false;
+        startTime = Time.time;
         switch(powerup) {
             case "speed":
                 data.moveSpeed *= speedModifier;
                 data.maxTurnSpeed = newTurnSpeed;
-                startTime = Time.time;
                 currentPowerup = "speed";
                 break;
             case "armor":
                 armor.SetCanUseArmor(true);
                 armor.SetShieldUI(true);
+                currentPowerup = "armor";
                 break;
             case "damage":
                 data.shellDamage *= damageModifier;
-                startTime = Time.time;
-                currentPowerup = "speed";
+                currentPowerup = "damage";
                 break;
             case "fireRate":
                 data.shootReloadTimer /= fireRateModifier;
-                startTime = Time.time;
-                currentPowerup = "speed";
+                currentPowerup = "fireRate";
                 break;
             case "health":
                 health.ResetHealth();
+                currentPowerup = "health";
                 break;
             default:
                 break;
@@ -67,33 +64,28 @@ public class PowerupController : MonoBehaviour
             case "speed":
                 data.moveSpeed /= speedModifier;
                 data.maxTurnSpeed = oldTurnSpeed;
-                currentPowerup = "";
-                startTime = 0;
                 break;
             case "armor":
                 break;
             case "damage":
                 data.shellDamage /= damageModifier;
-                currentPowerup = "";
-                startTime = 0;
                 break;
             case "fireRate":
                 data.shootReloadTimer *= fireRateModifier;
-                currentPowerup = "";
-                startTime = 0;
                 break;
             case "health":
                 break;
             default:
                 break;
         }
+        currentPowerup = "";
+        startTime = 0;
     }
-    public void CheckForPowerupCooldown() {
+    void CheckForPowerupCooldown() {
         if(Time.time - startTime >= cooldown) {
             RemoveCurrentPowerup(currentPowerup);
             canGrabPowerup = true;
         }
-        //Debug.Log(Time.time - startTime);
     }
     public void EnablePowerupVFX() {
         powerupVFX.gameObject.SetActive(true);

@@ -10,15 +10,10 @@ public class TankMotor : MonoBehaviour
     TankData data;
     float vertSpeed = 0;
 
-    public void Start() {
+    void Start() {
         data = gameObject.GetComponent<TankData>();
         characterController = gameObject.GetComponent<CharacterController>();
     }
-    void Update() {
-        //Debug.Log(characterController.isGrounded);
-        ApplyGravity();
-    }
-
     public void MoveTank(float speed) { // Negative value is backwards
         Vector3 speedVector = transform.forward; // Forward vector direction tank is facing
         if(!characterController.isGrounded) {
@@ -57,8 +52,5 @@ public class TankMotor : MonoBehaviour
         } else {
             return false;
         }
-    }
-    void ApplyGravity() {
-
     }
 }

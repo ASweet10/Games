@@ -16,7 +16,7 @@ public class MapGenerator : MonoBehaviour
     public RandomSpawnType randomSpawnType = RandomSpawnType.random;
     int mapSeed;
     int presetSeed = 10;
-    public bool gridGenerated = false;
+    bool gridGenerated = false;
 
     void Start() {
         gameManager = gameObject.GetComponent<Game_Manager>();
@@ -97,11 +97,15 @@ public class MapGenerator : MonoBehaviour
     }
     public int DateToInt(DateTime dateUsed) {
         //Add up current date and return as integer
-        int date = (dateUsed.Year + dateUsed.Month + dateUsed.Day + dateUsed.Hour + 
-            dateUsed.Minute + dateUsed.Second + dateUsed.Millisecond);
+        int date = dateUsed.Year + dateUsed.Month + dateUsed.Day + dateUsed.Hour + 
+            dateUsed.Minute + dateUsed.Second + dateUsed.Millisecond;
         return date;
     }
     public GameObject ReturnRandomPrefab() { // Random prefab room from list
         return gridPrefabArray[UnityEngine.Random.Range(0, gridPrefabArray.Length)];
+    }
+
+    public bool ReturnGridGeneratedStatus(){
+        return gridGenerated;
     }
 }
