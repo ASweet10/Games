@@ -10,6 +10,16 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject cursorUI;
     [SerializeField] GameObject quitGameOptionUI;
     [SerializeField] GameObject popupTextUI;
+    [SerializeField] GameObject dialogueUI;
+
+
+
+    [SerializeField] GameObject drinksUI;
+    [SerializeField] GameObject missingOneUI;
+    [SerializeField] GameObject missingTwoUI;
+    [SerializeField] GameObject missingThreeUI;
+
+
     [SerializeField] Text popupText;
     [SerializeField] Text objectiveText;
 
@@ -17,6 +27,10 @@ public class GameController : MonoBehaviour
     public bool gamePaused = false;
     public bool holdingItem = false;
     SceneFader sceneFader;
+    DialogueController dialogueController;
+    Interactables interactables;
+    [SerializeField] FirstPersonController fpController;
+    [SerializeField] MouseLook mouseLook;
 
     [SerializeField] string[] gameObjectives;
 
@@ -26,21 +40,20 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject creditsUI;
     [SerializeField] GameObject[] expositionUIObjects;
     [SerializeField] Texture2D arrowCursor; 
-    int currentExposition;
 
 
     [Header ("Main Events")]
-    [SerializeField] GameController gameController;
     [SerializeField] AudioSource audioSource;
     [SerializeField] AudioSource musicAudioSource;
     [SerializeField] AudioClip collectedSFX;
 
     void Awake() {
         sceneFader = gameObject.GetComponent<SceneFader>();
+        interactables = gameObject.GetComponent<Interactables>();
+        dialogueController = gameObject.GetComponent<DialogueController>();
     }
     void Start() {
         currentCheckpoint = 0;
-        currentExposition = 0;
 
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
             Cursor.lockState = CursorLockMode.None;
@@ -53,15 +66,43 @@ public class GameController : MonoBehaviour
     }
 
     void Update() {
+
         if(Input.GetKeyDown(KeyCode.Escape)) {
             int buildIndex = SceneManager.GetActiveScene().buildIndex;
 
             if(buildIndex == 1) {
-                if(gamePaused) {
-                    ResumeGame();
+                if(drinksUI.activeInHierarchy) {
+                    interactables.ToggleDrinksUI(false);
+                    fpController.canMoveRef = true;
+                    mouseLook.canRotateMouseRef = true;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+                else if(missingOneUI.activeInHierarchy) {
+                    interactables.ToggleMissingOneUI(false);
+                    fpController.canMoveRef = true;
+                    mouseLook.canRotateMouseRef = true;
+                } 
+                else if(missingTwoUI.activeInHierarchy) {
+                    interactables.ToggleMissingTwoUI(false);
+                    fpController.canMoveRef = true;
+                    mouseLook.canRotateMouseRef = true;
+                }
+                else if(missingThreeUI.activeInHierarchy) {
+                    interactables.ToggleMissingThreeUI(false);
+                    fpController.canMoveRef = true;
+                    mouseLook.canRotateMouseRef = true;
+                }
+                else if(dialogueUI.activeInHierarchy) {
+                    dialogueController.CloseDialogue();
                 }
                 else {
-                    PauseGame();
+                    if(gamePaused) {
+                        ResumeGame();
+                    }
+                    else {
+                        PauseGame();
+                    }
                 }
             }
         }
@@ -100,26 +141,8 @@ public class GameController : MonoBehaviour
         gamePaused = true;
     }
 
-    /*  MAIN MENU  */
-
-    public void PlayGameButton() {
-        StartCoroutine(sceneFader.FadeOutThenLoadScene(1));
-    }
-
-    public void AdvanceExpositionText() {
-
-    }
-    public void ToggleCreditsUI(bool creditsActive) {
-        if(creditsActive) {
-            mainMenuUI.SetActive(false);
-            creditsUI.SetActive(true);
-        } else {
-            creditsUI.SetActive(false);
-            mainMenuUI.SetActive(true);
-        }
-    }
-
     /*  IN-GAME  */
+
     public void OpenQuitGameUI() {
         quitGameOptionUI.SetActive(true);
     }
@@ -138,5 +161,20 @@ public class GameController : MonoBehaviour
             audioSource.Play();
         }
         yield return new WaitForSeconds(2.5f);
+    }
+
+    /*  MAIN MENU  */
+
+    public void PlayGameButton() {
+        StartCoroutine(sceneFader.FadeOutThenLoadScene(1));
+    }
+    public void ToggleCreditsUI(bool creditsActive) {
+        if(creditsActive) {
+            mainMenuUI.SetActive(false);
+            creditsUI.SetActive(true);
+        } else {
+            creditsUI.SetActive(false);
+            mainMenuUI.SetActive(true);
+        }
     }
 }

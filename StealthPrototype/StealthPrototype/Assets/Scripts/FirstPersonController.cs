@@ -61,11 +61,6 @@ public class FirstPersonController : MonoBehaviour
     private bool canCrouch = true;
 
 
-    [Header("Mouse Look")]
-    [SerializeField]  float mouseSensitivity = 100f;
-    [SerializeField]  Transform playerBody;
-    float xRotation = 0f;
-
 
     [Header("Highlights")]
     GameObject lastHighlightedObject;
@@ -93,7 +88,6 @@ public class FirstPersonController : MonoBehaviour
     void Update() {
         if(canMove) {
             HandleMovement();
-            HandleMouseLook();
         }
         if(canJump) {
             HandleJump();
@@ -103,7 +97,7 @@ public class FirstPersonController : MonoBehaviour
         }
         ApplyFinalMovement();
         if(isMoving) {
-            //HandleHeadBobEffect();
+           //HandleHeadBobEffect();
         }
     }
     void HandleMovement() {
@@ -134,19 +128,6 @@ public class FirstPersonController : MonoBehaviour
         controller.Move(currentMovement * Time.deltaTime);
     }
 
-    void HandleMouseLook() {
-        //Mouse Input * mouse sensitivity * delta time for same speed regardless of frame rate
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
-
-        xRotation -= mouseY;
-        //Clamp camera rotation so you can't look past a certain point 
-        xRotation = Mathf.Clamp(xRotation, -55f, 55f);
-
-        transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-
-        playerBody.Rotate(Vector3.up * mouseX);
-    }
 
     void HighlightObject(GameObject gameObject, bool uiEnabled) {
         if (lastHighlightedObject != gameObject) {

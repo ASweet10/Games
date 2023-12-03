@@ -7,6 +7,8 @@ public class FirstPersonController : MonoBehaviour
 {
     CharacterController controller;
     [SerializeField] Camera mainCamera;
+    [SerializeField] MouseLook mouseLook;
+    [SerializeField] Interactables interactables;
 
 
     /* Head Bob Effect */
@@ -50,7 +52,7 @@ public class FirstPersonController : MonoBehaviour
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;
 
-
+    /*
     [Header("Crouch")]
     [SerializeField] private float crouchHeight = 0.5f;
     [SerializeField] private float standingHeight = 2.1f;
@@ -59,6 +61,7 @@ public class FirstPersonController : MonoBehaviour
     private bool isCrouching;
     private bool duringCrouchAnimation;
     private bool canCrouch = true;
+    */
 
 
 
@@ -70,7 +73,13 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] Sprite interactCursor;
 
     GameController gameController;
+    DialogueController dialogueController;
     bool canMove = true;
+    public bool canMoveRef 
+    {
+        get { return canMove; }
+        set { canMove = value; }
+    }
     bool canSprint = true;
     bool canJump = true;
     bool canInteract = true;
@@ -80,6 +89,8 @@ public class FirstPersonController : MonoBehaviour
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
         controller = gameObject.GetComponent<CharacterController>();
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+        dialogueController = GameObject.FindGameObjectWithTag("GameController").GetComponent<DialogueController>();
+        interactables = GameObject.FindGameObjectWithTag("GameController").GetComponent<Interactables>();
     }
 
     void Start() {
@@ -97,6 +108,7 @@ public class FirstPersonController : MonoBehaviour
         if(canInteract) {
             HandleInteraction();
         }
+
         ApplyFinalMovement();
         if(isMoving) {
            //HandleHeadBobEffect();
@@ -141,8 +153,7 @@ public class FirstPersonController : MonoBehaviour
         }
     } 
 
-    void ClearHighlighted()
-    {
+    void ClearHighlighted() {
         if (lastHighlightedObject != null) {
             //lastHighlightedObject.GetComponent<MeshRenderer>().material = originalMat;
             lastHighlightedObject = null;
@@ -155,10 +166,9 @@ public class FirstPersonController : MonoBehaviour
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)); // Ray from center of the viewport
         RaycastHit rayHit;
 
-        // Check if we hit something
         if (Physics.Raycast(ray, out rayHit, rayDistance)) {
             GameObject hitObj = rayHit.collider.gameObject;  // Get object that was hit
-
+            //Debug.Log(hitObj);
             if(Vector3.Distance(gameObject.transform.position, hitObj.transform.position) < 4f) {
                 HighlightObject(hitObj, true);
                 if(Input.GetKeyDown(KeyCode.E)) {
@@ -169,7 +179,32 @@ public class FirstPersonController : MonoBehaviour
                         case "JournalNote":
                             //hitObj.GetComponent<Collider>().gameObject.GetComponent<Interactable>().EnableJournalNote();
                             break;
+                        case "MissingPosterOne":
+                            interactables.ToggleMissingOneUI(true);
+                            canMove = false;
+                            mouseLook.canRotateMouseRef = false;
+                            break;
+                        case "MissingPosterTwo":
+                            interactables.ToggleMissingTwoUI(true);
+                            canMove = false;
+                            mouseLook.canRotateMouseRef = false;
+                            break;
+                        case "MissingPosterThree":
+                            interactables.ToggleMissingThreeUI(true);
+                            canMove = false;
+                            mouseLook.canRotateMouseRef = false;
+                            break;
                         case "HiddenItem":
+                            break;
+                        case "Cashier":
+                            dialogueController.OpenGasDialog();
+                            break;
+                        case "Drinks":
+                            interactables.ToggleDrinksUI(true);
+                            Cursor.visible = true;
+                            Cursor.lockState = CursorLockMode.None;
+                            canMove = false;
+                            mouseLook.canRotateMouseRef = false;
                             break;
                         default:
                             ClearHighlighted();

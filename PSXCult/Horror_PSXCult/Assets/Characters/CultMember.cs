@@ -8,14 +8,14 @@ public class CultMember : MonoBehaviour
     [SerializeField] Transform playerTF;
     [SerializeField] float stabRange = 3f;
     bool playerInRange = false;
-    bool isStabbing = false;
+    //bool isStabbing = false;
 
     void Start () {
         playerTF = GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
     }
     void Update() {
         playerInRange = CheckIfPlayerInRange();
-        Debug.Log("In range: " + playerInRange);
+        //Debug.Log("In range: " + playerInRange);
         if(playerInRange) {
             anim.SetBool("stabbing", true);
         } else {

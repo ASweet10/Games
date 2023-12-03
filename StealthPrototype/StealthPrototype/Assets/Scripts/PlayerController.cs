@@ -41,7 +41,7 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
-        footstepAudioSource = gameObject.GetComponent<AudioSource>();
+        //footstepAudioSource = gameObject.GetComponent<AudioSource>();
     }
     void Start()
     {
@@ -76,12 +76,12 @@ public class PlayerController : MonoBehaviour
             }
             else
             {
-                PauseFootstepAudio();
+                //PauseFootstepAudio();
             }
         }
         else
         {
-            PauseFootstepAudio();
+           //PauseFootstepAudio();
         }
 
     }   
@@ -94,7 +94,7 @@ public class PlayerController : MonoBehaviour
         move.y = verticalSpeed;
         
         controller.Move(move * Time.deltaTime);
-        PlayFootstepAudio();
+        //PlayFootstepAudio();
         UpdateStamina();
     }
 

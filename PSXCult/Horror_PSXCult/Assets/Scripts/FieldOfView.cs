@@ -42,8 +42,7 @@ public class FieldOfView : MonoBehaviour
 
                 if(!Physics.Raycast(transform.position, directionToTarget, distanceToTarget, obstacleMask)){
                     canSeePlayer = true;
-                    canSeeSilhouette = false;
-                    //Debug.Log("Oi we've got an intrudah!");
+                    //Debug.Log("Can see player");
                 } else {
                     canSeePlayer = false;
                 }

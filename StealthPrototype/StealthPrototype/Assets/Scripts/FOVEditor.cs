@@ -24,6 +24,7 @@ public class FOVEditor : Editor
         if(fov.canSeePlayer){
             Handles.color = Color.red;
             Handles.DrawLine(fov.transform.position, fov.playerRef.transform.position);
+            Debug.Log("CAN SEE PLAYER");
         }
         if(fov.canSeeSilhouette){
             Handles.color = new Color(155, 75, 75);
