@@ -13,11 +13,13 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject dialogueUI;
 
 
-
     [SerializeField] GameObject drinksUI;
+    [SerializeField] GameObject iceCreamUI;
     [SerializeField] GameObject missingOneUI;
     [SerializeField] GameObject missingTwoUI;
     [SerializeField] GameObject missingThreeUI;
+    [SerializeField] GameObject missingFourUI;
+    [SerializeField] GameObject missingNewsArticle;
 
 
     [SerializeField] Text popupText;
@@ -25,9 +27,8 @@ public class GameController : MonoBehaviour
 
     public int currentCheckpoint;
     public bool gamePaused = false;
-    public bool holdingItem = false;
     SceneFader sceneFader;
-    DialogueController dialogueController;
+    DialogController dialogController;
     Interactables interactables;
     [SerializeField] FirstPersonController fpController;
     [SerializeField] MouseLook mouseLook;
@@ -50,7 +51,7 @@ public class GameController : MonoBehaviour
     void Awake() {
         sceneFader = gameObject.GetComponent<SceneFader>();
         interactables = gameObject.GetComponent<Interactables>();
-        dialogueController = gameObject.GetComponent<DialogueController>();
+        dialogController = gameObject.GetComponent<DialogController>();
     }
     void Start() {
         currentCheckpoint = 0;
@@ -78,24 +79,54 @@ public class GameController : MonoBehaviour
                     Cursor.visible = false;
                     Cursor.lockState = CursorLockMode.Locked;
                 }
-                else if(missingOneUI.activeInHierarchy) {
-                    interactables.ToggleMissingOneUI(false);
+                else if(iceCreamUI.activeInHierarchy) {
+                    interactables.ToggleIceCreamUI(false);
+                    interactables.HandleIceCreamAnimation(false);
+                    interactables.Disable3DIceCream();
                     fpController.canMoveRef = true;
                     mouseLook.canRotateMouseRef = true;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+                else if(missingOneUI.activeInHierarchy) {
+                    interactables.ToggleMissingUI(1, false);
+                    fpController.canMoveRef = true;
+                    mouseLook.canRotateMouseRef = true;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
                 } 
                 else if(missingTwoUI.activeInHierarchy) {
-                    interactables.ToggleMissingTwoUI(false);
+                    interactables.ToggleMissingUI(2, false);
                     fpController.canMoveRef = true;
                     mouseLook.canRotateMouseRef = true;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
                 }
                 else if(missingThreeUI.activeInHierarchy) {
-                    interactables.ToggleMissingThreeUI(false);
+                    interactables.ToggleMissingUI(3, false);
                     fpController.canMoveRef = true;
                     mouseLook.canRotateMouseRef = true;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
                 }
+                else if(missingFourUI.activeInHierarchy) {
+                    interactables.ToggleMissingUI(4, false);
+                    fpController.canMoveRef = true;
+                    mouseLook.canRotateMouseRef = true;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+                }
+                else if(missingNewsArticle.activeInHierarchy) {
+                    interactables.ToggleMissingUI(5, false);
+                    fpController.canMoveRef = true;
+                    mouseLook.canRotateMouseRef = true;
+                    Cursor.visible = false;
+                    Cursor.lockState = CursorLockMode.Locked;
+                } 
                 else if(dialogueUI.activeInHierarchy) {
-                    dialogueController.CloseDialogue();
+                    dialogController.CloseDialogue();
                 }
+                /*
                 else {
                     if(gamePaused) {
                         ResumeGame();
@@ -104,6 +135,7 @@ public class GameController : MonoBehaviour
                         PauseGame();
                     }
                 }
+                */
             }
         }
     }
@@ -163,7 +195,7 @@ public class GameController : MonoBehaviour
         yield return new WaitForSeconds(2.5f);
     }
 
-    /*  MAIN MENU  */
+    /*  MENUS  */
 
     public void PlayGameButton() {
         StartCoroutine(sceneFader.FadeOutThenLoadScene(1));
@@ -177,4 +209,5 @@ public class GameController : MonoBehaviour
             mainMenuUI.SetActive(true);
         }
     }
+
 }

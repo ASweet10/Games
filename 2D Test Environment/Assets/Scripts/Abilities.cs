@@ -21,7 +21,7 @@ public class Abilities : MonoBehaviour
 
     public Color abilityColorOne {get; private set;}
     Vector3 mousePosition; // World position of mouse
-    [SerializeField] GameObject castPoint;
+    [SerializeField] Transform castPoint;
     bool canUseLightning = true;
     bool canUseChainLightning = true;
     bool canCreateExplosion = true;
@@ -29,28 +29,29 @@ public class Abilities : MonoBehaviour
     private void Update() {
         if(canUseLightning){
             if(Input.GetKeyDown(abilityOneKey)){
-                Debug.Log("boom");
                 mousePosition = ReturnMousePosition();
                 CastLightningBolt(mousePosition);
             }
         }
         if(canUseChainLightning){
             if(Input.GetKeyDown(abilityTwoKey)){
-                Debug.Log("chain lightning");
                 mousePosition = ReturnMousePosition();
                 CastChainLightning(mousePosition);
             }
         }
         if(canCreateExplosion){
             if(Input.GetKeyDown(abilityThreeKey)){
-                Debug.Log("explosion");
                 mousePosition = ReturnMousePosition();
                 CreateExplosion(mousePosition);
             }
         }
     }
-    public void CastLightningBolt(Vector3 castPosition){
-        Instantiate(lightningBolt, castPoint.transform.position + new Vector3(0, 1, 0), Quaternion.identity);
+    public void CastLightningBolt(Vector3 mousePosition){
+        Vector3 rotationVector = mousePosition - castPoint.position;
+        Debug.Log(rotationVector);
+        //GameObject bolt = Instantiate(lightningBolt, castPoint.transform.position + new Vector3(0, 1, 0), Quaternion.Euler(new Vector3(5, 25, 125)));
+        GameObject bolt = Instantiate(lightningBolt, castPoint.transform.position + new Vector3(0, 1, 0), Quaternion.Euler(new Vector3(0, 0, 90)));
+
         StartCoroutine(WaitForAbilityCooldown(canUseLightning, lightningCooldown));
     }
 

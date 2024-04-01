@@ -10,9 +10,7 @@ public class RotateTires : MonoBehaviour
     void Awake() {
         wheelTransform = gameObject.GetComponent<Transform>();
     }
-    // Update is called once per frame
-    void Update()
-    {
+    void Update() {
         RotateTheTire();
     }
     

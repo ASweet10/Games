@@ -52,7 +52,7 @@ public class FirstPersonController : MonoBehaviour
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;
 
-    /*
+    
     [Header("Crouch")]
     [SerializeField] private float crouchHeight = 0.5f;
     [SerializeField] private float standingHeight = 2.1f;
@@ -61,7 +61,7 @@ public class FirstPersonController : MonoBehaviour
     private bool isCrouching;
     private bool duringCrouchAnimation;
     private bool canCrouch = true;
-    */
+    
 
 
 
@@ -73,12 +73,16 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] Sprite interactCursor;
 
     GameController gameController;
-    DialogueController dialogueController;
+    DialogueManager dialogueManager;
     bool canMove = true;
-    public bool canMoveRef 
-    {
+    public bool canMoveRef {
         get { return canMove; }
         set { canMove = value; }
+    }
+    bool playerHoldingGasStationItem = false;
+    public bool playerHoldingGasItem {
+        get { return playerHoldingGasStationItem; }
+        set { playerHoldingGasStationItem = value; }
     }
     bool canSprint = true;
     bool canJump = true;
@@ -89,7 +93,7 @@ public class FirstPersonController : MonoBehaviour
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
         controller = gameObject.GetComponent<CharacterController>();
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
-        dialogueController = GameObject.FindGameObjectWithTag("GameController").GetComponent<DialogueController>();
+        dialogueManager = gameObject.GetComponent<DialogueManager>();
         interactables = GameObject.FindGameObjectWithTag("GameController").GetComponent<Interactables>();
     }
 
@@ -104,6 +108,9 @@ public class FirstPersonController : MonoBehaviour
         }
         if(canJump) {
             HandleJump();
+        }
+        if(canCrouch) {
+            AttemptToCrouch();
         }
         if(canInteract) {
             HandleInteraction();
@@ -168,7 +175,6 @@ public class FirstPersonController : MonoBehaviour
 
         if (Physics.Raycast(ray, out rayHit, rayDistance)) {
             GameObject hitObj = rayHit.collider.gameObject;  // Get object that was hit
-            //Debug.Log(hitObj);
             if(Vector3.Distance(gameObject.transform.position, hitObj.transform.position) < 4f) {
                 HighlightObject(hitObj, true);
                 if(Input.GetKeyDown(KeyCode.E)) {
@@ -180,31 +186,51 @@ public class FirstPersonController : MonoBehaviour
                             //hitObj.GetComponent<Collider>().gameObject.GetComponent<Interactable>().EnableJournalNote();
                             break;
                         case "MissingPosterOne":
-                            interactables.ToggleMissingOneUI(true);
-                            canMove = false;
-                            mouseLook.canRotateMouseRef = false;
+                            interactables.ToggleMissingUI(1, true);
+                            DisableMovementDuringUI();
                             break;
                         case "MissingPosterTwo":
-                            interactables.ToggleMissingTwoUI(true);
-                            canMove = false;
-                            mouseLook.canRotateMouseRef = false;
+                            interactables.ToggleMissingUI(2, true);
+                            DisableMovementDuringUI();
                             break;
                         case "MissingPosterThree":
-                            interactables.ToggleMissingThreeUI(true);
-                            canMove = false;
-                            mouseLook.canRotateMouseRef = false;
+                            interactables.ToggleMissingUI(3, true);
+                            DisableMovementDuringUI();
+                            break;
+                        case "MissingPosterFour":
+                            interactables.ToggleMissingUI(4, true);
+                            DisableMovementDuringUI();
+                            break;
+                        case "MissingNewsArticle":
+                            interactables.ToggleMissingUI(5, true);
+                            DisableMovementDuringUI();
+                            break;
+                        case "IceCream":
+                            interactables.ToggleIceCreamUI(true);
+                            interactables.HandleIceCreamAnimation(true);
+                            DisableMovementDuringUI();
+                            break;
+                        case "Arcade":
+                            // fix camera on screen
+                            // disable normal movement
+                            // enable 2d movement script
+                            // press button (e maybe) to progress screen
+                            // sfx of coins in slot?
+                            // howl sfx & game starts
+                            // Level 1: car park, woods, lake
+                            // Level 2: woods, camp grounds
+                            // Level 3: ?
+                            DisableMovementDuringUI();
                             break;
                         case "HiddenItem":
                             break;
                         case "Cashier":
-                            dialogueController.OpenGasDialog();
+                            var dialogueTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
+                            dialogueTrigger.TriggerDialogue();
                             break;
                         case "Drinks":
                             interactables.ToggleDrinksUI(true);
-                            Cursor.visible = true;
-                            Cursor.lockState = CursorLockMode.None;
-                            canMove = false;
-                            mouseLook.canRotateMouseRef = false;
+                            DisableMovementDuringUI();
                             break;
                         default:
                             ClearHighlighted();
@@ -217,7 +243,45 @@ public class FirstPersonController : MonoBehaviour
             }
         }
     }
+    
+    public void AttemptToCrouch() {
+        if(!duringCrouchAnimation && controller.isGrounded) {
+            if(Input.GetKeyDown(KeyCode.C)) {
+                StartCoroutine(CrouchOrStand());
+            }
+        }
+    }
+    private IEnumerator CrouchOrStand() {
+        duringCrouchAnimation = true;
 
+        float timeElapsed = 0f;
+        float currentHeight = controller.height;
+        float targetHeight;
+        if(isCrouching) {
+            targetHeight = standingHeight;
+            isCrouching = false;
+        }
+        else {
+            targetHeight = crouchHeight;
+            isCrouching = true;
+        }
+
+        while(timeElapsed > timeToCrouch) {
+            controller.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed / timeToCrouch);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+        controller.height = targetHeight;
+        duringCrouchAnimation = false;
+    }
+
+    void DisableMovementDuringUI() {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+        canMove = false;
+        currentMovement = Vector3.zero;
+        mouseLook.canRotateMouseRef = false;
+    }
     void HandleStamina() {
         if(currentStamina <= 0) {
             windedAudioSource.Play();
@@ -252,37 +316,5 @@ public class FirstPersonController : MonoBehaviour
             }
         }
     }
-
-    /*
-    public void AttemptToCrouch() {
-        if(!duringCrouchAnimation && controller.isGrounded) {
-            if(Input.GetKeyDown(KeyCode.C)) {
-                StartCoroutine(CrouchOrStand());
-            }
-        }
-    }
-    private IEnumerator CrouchOrStand() {
-        duringCrouchAnimation = true;
-
-        float timeElapsed = 0f;
-        float currentHeight = controller.height;
-        float targetHeight;
-        if(isCrouching) {
-            targetHeight = standingHeight;
-            isCrouching = false;
-        }
-        else {
-            targetHeight = crouchHeight;
-            isCrouching = true;
-        }
-
-        while(timeElapsed > timeToCrouch) {
-            controller.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed / timeToCrouch);
-            timeElapsed += Time.deltaTime;
-            yield return null;
-        }
-        controller.height = targetHeight;
-        duringCrouchAnimation = false;
-    }
-    */
+    
 }
