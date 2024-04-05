@@ -19,6 +19,5 @@ public class TextColorLerper : MonoBehaviour
     void LerpColor() {
         Color newColor = Color.Lerp(startColor, endColor, Mathf.PingPong(Time.time, 1));
         spriteRenderer.material.color = newColor;
-        Debug.Log(spriteRenderer.color.a);
     }
 }

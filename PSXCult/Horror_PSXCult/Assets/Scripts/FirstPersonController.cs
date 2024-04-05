@@ -211,15 +211,8 @@ public class FirstPersonController : MonoBehaviour
                             DisableMovementDuringUI();
                             break;
                         case "Arcade":
-                            // fix camera on screen
-                            // disable normal movement
-                            // enable 2d movement script
-                            // press button (e maybe) to progress screen
-                            // sfx of coins in slot?
-                            // howl sfx & game starts
-                            // Level 1: car park, woods, lake
-                            // Level 2: woods, camp grounds
-                            // Level 3: ?
+                            interactables.ToggleArcade(true);
+                            interactables.PlayingArcadeGame = true;
                             DisableMovementDuringUI();
                             break;
                         case "HiddenItem":

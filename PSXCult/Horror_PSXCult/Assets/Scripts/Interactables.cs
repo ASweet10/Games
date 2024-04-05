@@ -28,9 +28,26 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject drinks3DObject;
     public int drinksIndex;
 
+
+    [Header("Arcade")]
+    [SerializeField] GameObject arcadeStartScreen;
+    [SerializeField] GameObject arcadeLevelOne;
+    [SerializeField] GameObject arcadeDeathUI;
     [SerializeField] Camera arcadeCamera;
     [SerializeField] Camera normalCamera;
-    bool gameRunning = false;
+    [SerializeField] ArcadeController arcadeController;
+    [SerializeField] GameObject arcadeWolf;
+    [SerializeField] ArcadeWolf arcadeWolfScript;
+    [SerializeField] FirstPersonController firstPersonController;
+    [SerializeField] MouseLook mouseLook;
+    [SerializeField] AudioSource arcadeSound;
+    [SerializeField] AudioClip arcadeMusic;
+    [SerializeField] AudioClip arcadeCoinSFX;
+    bool playingArcadeGame = false;
+    public bool PlayingArcadeGame {
+        get { return playingArcadeGame; }
+        set { playingArcadeGame = value; }
+    }
 
     void Start () {
         drinksIndex = 0;
@@ -99,15 +116,50 @@ public class Interactables : MonoBehaviour
         iceCreamOptions[iceCreamIndex].SetActive(true);
         iceCreamTitle.text = iceCreamOptions[iceCreamIndex].name;
     }
-    public void ToggleArcadeGame(bool choice) {
-        if(gameRunning) {
+    
+    // Level 1: car park, woods, lake
+    // Level 2: woods, camp grounds
+    // Level 3: ?
+
+    public void ToggleArcade(bool playingGame) {
+        if(playingGame) {
+            arcadeCamera.enabled = true;
+            normalCamera.enabled = false;
+            arcadeController.enabled = true;
+            firstPersonController.enabled = false;
+            mouseLook.enabled = false;
+            StartCoroutine(StartArcadeGame());
+        } else {
             normalCamera.enabled = true;
             arcadeCamera.enabled = false;
-            gameRunning = false;
-        } else {
-            normalCamera.enabled = false;
-            arcadeCamera.enabled = true;
-            gameRunning = true;
+            arcadeController.enabled = false;
+            firstPersonController.enabled = true;
+            mouseLook.enabled = true;
+            arcadeSound.Stop();
+            arcadeSound.clip = arcadeCoinSFX; // reset for next game
+            if(arcadeLevelOne.activeInHierarchy) {
+                arcadeLevelOne.SetActive(false);
+            }
+            if(arcadeDeathUI.activeInHierarchy) {
+                arcadeDeathUI.SetActive(false);
+            }
+            arcadeStartScreen.SetActive(true);
         }
+    }
+
+    IEnumerator StartArcadeGame() {
+        arcadeSound.Play();
+        yield return new WaitForSeconds(2f);
+        arcadeStartScreen.SetActive(false);
+        arcadeLevelOne.SetActive(true);
+        arcadeController.ResetArcadePlayerPosition();
+
+        arcadeController.ResetStartTime(); // not working; wolf autospawns when you play again
+
+        arcadeController.CanMove = true;
+        arcadeWolfScript.ResetWolfPosition();
+        arcadeSound.clip = arcadeMusic;
+        arcadeSound.Play();
+        arcadeSound.loop = true;
     }
 }

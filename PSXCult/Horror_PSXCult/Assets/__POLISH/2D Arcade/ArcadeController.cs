@@ -5,25 +5,41 @@ using UnityEngine;
 
 public class ArcadeController : MonoBehaviour
 {
+    [SerializeField] GameObject arcadeWolf;
     [SerializeField] GameObject deathUI;
+    [SerializeField] GameObject arcadeLevelOne;
     [SerializeField] SpriteRenderer spriteRenderer;
     [SerializeField] Rigidbody2D playerRB;
     [SerializeField] Animator anim;
+    [SerializeField] Transform arcadePlayerTF;
+    [SerializeField] Transform playerStartPosition;
     Vector2 movement;
     float moveSpeed = 1.5f;
     int playerHealth;
     int maxHealth = 3;
     bool canMove;
+    public bool CanMove {
+        get { return canMove; }
+        set { canMove = value; }
+    }
+    bool wolfSpawned;
     bool facingRight;
+    float startTime;
 
     void Start() {
         playerHealth = maxHealth;
         canMove = true;
         facingRight = true;
+        startTime = Time.time;
+        wolfSpawned = false;
     }
-
-    // Update is called once per frame
     void Update() {
+        if(Time.time - startTime > 8f) {
+            if(!wolfSpawned) {
+                arcadeWolf.SetActive(true);
+                wolfSpawned = true;
+            }
+        }
         MovePlayerOnInput();
     }
     void MovePlayerOnInput() {
@@ -53,8 +69,6 @@ public class ArcadeController : MonoBehaviour
             }
         }
     }
-
-
     // or no take damage, if caught by monster you are dead. restart level / lose life
     void TakeDamage() {
         playerHealth --;
@@ -64,5 +78,18 @@ public class ArcadeController : MonoBehaviour
         } else {
             // screen gets bloodier? some feedback
         }
+    }
+
+    public void HandleArcadeGameOver() {
+        canMove = false;
+        deathUI.SetActive(true);
+        arcadeLevelOne.SetActive(false);
+    }
+
+    public void ResetArcadePlayerPosition() {
+        arcadePlayerTF.position = playerStartPosition.position;
+    }
+    public void ResetStartTime() {
+        startTime = Time.time;
     }
 }

@@ -67,64 +67,39 @@ public class GameController : MonoBehaviour
     }
 
     void Update() {
-
+        // consider moving all input logic to firstperson controller
         if(Input.GetKeyDown(KeyCode.Escape)) {
             int buildIndex = SceneManager.GetActiveScene().buildIndex;
-
             if(buildIndex == 1) {
                 if(drinksUI.activeInHierarchy) {
                     interactables.ToggleDrinksUI(false);
-                    fpController.canMoveRef = true;
-                    mouseLook.canRotateMouseRef = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
                 }
                 else if(iceCreamUI.activeInHierarchy) {
                     interactables.ToggleIceCreamUI(false);
                     interactables.HandleIceCreamAnimation(false);
                     interactables.Disable3DIceCream();
-                    fpController.canMoveRef = true;
-                    mouseLook.canRotateMouseRef = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
                 }
                 else if(missingOneUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(1, false);
-                    fpController.canMoveRef = true;
-                    mouseLook.canRotateMouseRef = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
                 } 
                 else if(missingTwoUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(2, false);
-                    fpController.canMoveRef = true;
-                    mouseLook.canRotateMouseRef = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
                 }
                 else if(missingThreeUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(3, false);
-                    fpController.canMoveRef = true;
-                    mouseLook.canRotateMouseRef = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
                 }
                 else if(missingFourUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(4, false);
-                    fpController.canMoveRef = true;
-                    mouseLook.canRotateMouseRef = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
                 }
                 else if(missingNewsArticle.activeInHierarchy) {
                     interactables.ToggleMissingUI(5, false);
-                    fpController.canMoveRef = true;
-                    mouseLook.canRotateMouseRef = true;
-                    Cursor.visible = false;
-                    Cursor.lockState = CursorLockMode.Locked;
                 } 
                 else if(dialogueUI.activeInHierarchy) {
                     dialogController.CloseDialogue();
+                }
+                else if(interactables.PlayingArcadeGame) {
+                    interactables.ToggleArcade(false);
+                    interactables.PlayingArcadeGame = false;
                 }
                 /*
                 else {
@@ -136,6 +111,10 @@ public class GameController : MonoBehaviour
                     }
                 }
                 */
+                fpController.canMoveRef = true;
+                mouseLook.canRotateMouseRef = true;
+                Cursor.visible = false;
+                Cursor.lockState = CursorLockMode.Locked;
             }
         }
     }
