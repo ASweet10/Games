@@ -28,10 +28,10 @@ public class GameController : MonoBehaviour
     public int currentCheckpoint;
     public bool gamePaused = false;
     SceneFader sceneFader;
-    DialogController dialogController;
     Interactables interactables;
     [SerializeField] FirstPersonController fpController;
     [SerializeField] MouseLook mouseLook;
+    [SerializeField] DialogueManager dialogueManager;
 
     [SerializeField] string[] gameObjectives;
 
@@ -51,7 +51,7 @@ public class GameController : MonoBehaviour
     void Awake() {
         sceneFader = gameObject.GetComponent<SceneFader>();
         interactables = gameObject.GetComponent<Interactables>();
-        dialogController = gameObject.GetComponent<DialogController>();
+        dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
     }
     void Start() {
         currentCheckpoint = 0;
@@ -95,7 +95,7 @@ public class GameController : MonoBehaviour
                     interactables.ToggleMissingUI(5, false);
                 } 
                 else if(dialogueUI.activeInHierarchy) {
-                    dialogController.CloseDialogue();
+                    dialogueManager.DialogueStop();
                 }
                 else if(interactables.PlayingArcadeGame) {
                     interactables.ToggleArcade(false);

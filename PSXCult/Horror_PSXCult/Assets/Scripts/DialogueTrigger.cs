@@ -30,6 +30,10 @@ public class dialogueString {
     public string text;
     public bool isEnd; // Is this final conversation line?
 
+    [Header("Random Option")]
+    public bool isRandomOption; // Choose from one of these
+    public string[] randomOptions;
+
     [Header("Branch")]
     public bool isQuestion;
     public string answerOption1;

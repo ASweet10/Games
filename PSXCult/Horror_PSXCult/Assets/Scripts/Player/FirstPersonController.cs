@@ -175,7 +175,7 @@ public class FirstPersonController : MonoBehaviour
 
         if (Physics.Raycast(ray, out rayHit, rayDistance)) {
             GameObject hitObj = rayHit.collider.gameObject;  // Get object that was hit
-            if(Vector3.Distance(gameObject.transform.position, hitObj.transform.position) < 4f) {
+            if(Vector3.Distance(gameObject.transform.position, hitObj.transform.position) < 6f) {
                 HighlightObject(hitObj, true);
                 if(Input.GetKeyDown(KeyCode.E)) {
                     switch(hitObj.GetComponent<Collider>().gameObject.tag) {
@@ -220,6 +220,7 @@ public class FirstPersonController : MonoBehaviour
                         case "Cashier":
                             var dialogueTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
                             dialogueTrigger.TriggerDialogue();
+                            Debug.Log("cashier");
                             break;
                         case "Drinks":
                             interactables.ToggleDrinksUI(true);

@@ -15,7 +15,6 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] Button option3Button;
 
     [SerializeField] float typingSpeed = 0.05f;
-    [SerializeField] float turnSpeed = 2f;
 
     List<dialogueString> dialogueList;
 
@@ -29,10 +28,6 @@ public class DialogueManager : MonoBehaviour
     void Start() {
         dialogueParent.SetActive(false); // Hide dialogue by default
     }
-    void Update() {
-        //Debug.Log("dialogue index: " + currentDialogueIndex);
-    }
-
     public void DialogueStart(List<dialogueString> textToPrint, string speakerName) {
         dialogueParent.SetActive(true);
         speakerText.text = speakerName;
@@ -44,6 +39,17 @@ public class DialogueManager : MonoBehaviour
         Cursor.visible = true;
 
         dialogueList = textToPrint;
+
+        // check speaker
+        // switch(cashier)
+        //  if gasPurchased... 
+        //    if itemHeld
+        //       attempt to purchase item (index 11 buy item)
+        //    else
+        //       no item random option (index 10 no item)
+        //   else
+        //       index = 0
+        //       (Player chooses to buy gas with button; event should set gasPurchased = true)
         currentDialogueIndex = 0;
 
         DisableButtons();
@@ -56,9 +62,15 @@ public class DialogueManager : MonoBehaviour
 
             line.startDialogueEvent?.Invoke();
 
+            if(line.isRandomOption) {
+                yield return StartCoroutine(TypeText(line.randomOptions[Random.Range(0, line.randomOptions.Length - 1)]));
+            }
+
             if (line.isQuestion) {
                 yield return StartCoroutine(TypeText(line.text));
 
+                // check number of answers? (put in array instead of 3 strings)
+                // Only one box appears / is interactable if only one answer etc.
                 option1Button.interactable = true;
                 option2Button.interactable = true;
                 option3Button.interactable = true;
@@ -116,7 +128,7 @@ public class DialogueManager : MonoBehaviour
         option3Button.GetComponentInChildren<TMP_Text>().text = "";
     }
 
-    void DialogueStop() {
+    public void DialogueStop() {
         StopAllCoroutines();
         Debug.Log("stop");
         dialogueText.text = "";
