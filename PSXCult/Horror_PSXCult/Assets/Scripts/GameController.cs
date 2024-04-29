@@ -75,9 +75,8 @@ public class GameController : MonoBehaviour
                     interactables.ToggleDrinksUI(false);
                 }
                 else if(iceCreamUI.activeInHierarchy) {
-                    interactables.ToggleIceCreamUI(false);
-                    interactables.HandleIceCreamAnimation(false);
-                    interactables.Disable3DIceCream();
+                    interactables.ToggleDrinksUI(false);
+                    //interactables.Disable3DDrinks();
                 }
                 else if(missingOneUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(1, false);

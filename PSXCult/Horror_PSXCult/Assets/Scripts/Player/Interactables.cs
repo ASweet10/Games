@@ -11,22 +11,16 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject missingThreeUI;
     [SerializeField] GameObject missingFourUI;
     [SerializeField] GameObject missingNewsArticle;
-
     [SerializeField] GameObject UICamera;
 
-    [Header ("Ice Cream")]
-    [SerializeField] GameObject[] iceCreamOptions;
-    [SerializeField] GameObject iceCreamUI;
-    [SerializeField] TMP_Text iceCreamTitle;
-    [SerializeField] GameObject iceCream3DObject;
-    [SerializeField] Animator iceCreamAnimator;
-    public int iceCreamIndex;
 
     [Header ("Drinks")]
     [SerializeField] GameObject[] drinkOptions;
-    [SerializeField] GameObject drinksUI;
-    [SerializeField] GameObject drinks3DObject;
-    public int drinksIndex;
+    [SerializeField] String[] drinkDescriptions;
+    [SerializeField] GameObject drinkUI;
+    [SerializeField] TMP_Text drinkTitle;
+    [SerializeField] TMP_Text drinkDescription;
+    public int drinkIndex;
 
 
     [Header("Arcade")]
@@ -36,7 +30,6 @@ public class Interactables : MonoBehaviour
     [SerializeField] Camera arcadeCamera;
     [SerializeField] Camera normalCamera;
     [SerializeField] ArcadeController arcadeController;
-    [SerializeField] GameObject arcadeWolf;
     [SerializeField] ArcadeWolf arcadeWolfScript;
     [SerializeField] FirstPersonController firstPersonController;
     [SerializeField] MouseLook mouseLook;
@@ -50,11 +43,25 @@ public class Interactables : MonoBehaviour
     }
 
     void Start () {
-        drinksIndex = 0;
-        iceCreamIndex = 0;
+        drinkIndex = 0;
     }
     public void ToggleDrinksUI(bool choice) {   // Drinks in gas station
-        drinksUI.SetActive(choice);
+        drinkUI.SetActive(choice);
+        UICamera.SetActive(choice);
+        drinkOptions[0].SetActive(choice);
+        if(choice) {
+            drinkTitle.text = drinkOptions[drinkIndex].name;
+            drinkDescription.text = drinkDescriptions[drinkIndex];
+        } else {
+            foreach(GameObject drink in drinkOptions) {
+                drink.SetActive(false);
+            }
+        }
+    }
+    public void Disable3DDrinks() {
+        foreach(GameObject drink in drinkOptions) {
+            drink.SetActive(false);
+        }
     }
     public void ToggleMissingUI(int posterNumber, bool choice) {
         switch (posterNumber) {
@@ -75,46 +82,28 @@ public class Interactables : MonoBehaviour
                 break;
         }
     }
-    public void ToggleIceCreamUI(bool choice) {
-        iceCreamUI.SetActive(choice);
-        UICamera.SetActive(choice);
-        iceCreamOptions[0].SetActive(choice);
-        if(choice) {
-            iceCreamTitle.text = iceCreamOptions[iceCreamIndex].name;
-        }
-    }
-    public void Disable3DIceCream() {
-        foreach(GameObject iceCream in iceCreamOptions) {
-            iceCream.SetActive(false);
-        }
-    }
-    public void HandleIceCreamAnimation(bool setDoorStatus) {
-        if(setDoorStatus == true) {
-            iceCreamAnimator.Play("OpenIceCreamDoor");
-        } else {
-            iceCreamAnimator.Play("CloseIceCreamDoor");
-        }
 
-    }
-    public void HandlePreviousIceCreamButton() {
-        iceCreamOptions[iceCreamIndex].SetActive(false);
-        if(iceCreamIndex == 0) {
-            iceCreamIndex = iceCreamOptions.Length - 1;
+    public void HandlePreviousDrinkButton() {
+        drinkOptions[drinkIndex].SetActive(false);
+        if(drinkIndex == 0) {
+            drinkIndex = drinkOptions.Length - 1;
         } else {
-            iceCreamIndex --;
+            drinkIndex --;
         }
-        iceCreamOptions[iceCreamIndex].SetActive(true);
-        iceCreamTitle.text = iceCreamOptions[iceCreamIndex].name;
+        drinkOptions[drinkIndex].SetActive(true);
+        drinkTitle.text = drinkOptions[drinkIndex].name;
+        drinkDescription.text = drinkDescriptions[drinkIndex];
     }
-    public void HandleNextIceCreamButton() {
-        iceCreamOptions[iceCreamIndex].SetActive(false);
-        if(iceCreamIndex == iceCreamOptions.Length - 1) {
-            iceCreamIndex = 0;
+    public void HandleNextDrinkButton() {
+        drinkOptions[drinkIndex].SetActive(false);
+        if(drinkIndex == drinkOptions.Length - 1) {
+            drinkIndex = 0;
         } else {
-            iceCreamIndex ++;
+            drinkIndex ++;
         }
-        iceCreamOptions[iceCreamIndex].SetActive(true);
-        iceCreamTitle.text = iceCreamOptions[iceCreamIndex].name;
+        drinkOptions[drinkIndex].SetActive(true);
+        drinkTitle.text = drinkOptions[drinkIndex].name;
+        drinkDescription.text = drinkDescriptions[drinkIndex];
     }
     
     // Level 1: car park, woods, lake

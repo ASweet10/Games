@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -63,14 +64,10 @@ public class FirstPersonController : MonoBehaviour
     private bool canCrouch = true;
     
 
-
-
     [Header("Highlights")]
     GameObject lastHighlightedObject;
-
-    [SerializeField] Image cursorUI;
-    [SerializeField] Sprite normalCursor;
-    [SerializeField] Sprite interactCursor;
+    [SerializeField] GameObject cursor;
+    [SerializeField] TMP_Text interactText;
 
     GameController gameController;
     DialogueManager dialogueManager;
@@ -86,8 +83,7 @@ public class FirstPersonController : MonoBehaviour
     }
     bool canSprint = true;
     bool canJump = true;
-    bool canInteract = true;
-      
+    bool canInteract = true; 
     
     void Awake() {
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
@@ -150,21 +146,28 @@ public class FirstPersonController : MonoBehaviour
     }
 
 
-    void HighlightObject(GameObject gameObject, bool uiEnabled) {
-        if (lastHighlightedObject != gameObject) {
+    void HighlightObject(GameObject hitObj, bool uiEnabled) {
+        if (lastHighlightedObject != hitObj) {
             ClearHighlighted();
-            lastHighlightedObject = gameObject;
+            lastHighlightedObject = hitObj;
             if(uiEnabled) {
-                cursorUI.sprite = interactCursor;
+                interactText.enabled = true;
+                if(hitObj.tag != "Untagged") {
+                    cursor.SetActive(false);
+                    interactText.text = "[ " + hitObj.tag + " ]";
+                } else {
+                    interactText.text = "";
+                }
             }
         }
-    } 
+    }
 
     void ClearHighlighted() {
         if (lastHighlightedObject != null) {
             //lastHighlightedObject.GetComponent<MeshRenderer>().material = originalMat;
             lastHighlightedObject = null;
-            cursorUI.sprite = normalCursor;
+            cursor.SetActive(true);
+            interactText.enabled = false;
         }
     } 
     
@@ -205,9 +208,8 @@ public class FirstPersonController : MonoBehaviour
                             interactables.ToggleMissingUI(5, true);
                             DisableMovementDuringUI();
                             break;
-                        case "IceCream":
-                            interactables.ToggleIceCreamUI(true);
-                            interactables.HandleIceCreamAnimation(true);
+                        case "Drinks":
+                            interactables.ToggleDrinksUI(true);
                             DisableMovementDuringUI();
                             break;
                         case "Arcade":
@@ -221,10 +223,6 @@ public class FirstPersonController : MonoBehaviour
                             var dialogueTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
                             dialogueTrigger.TriggerDialogue();
                             Debug.Log("cashier");
-                            break;
-                        case "Drinks":
-                            interactables.ToggleDrinksUI(true);
-                            DisableMovementDuringUI();
                             break;
                         default:
                             ClearHighlighted();
