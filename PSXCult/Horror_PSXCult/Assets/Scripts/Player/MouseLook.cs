@@ -11,8 +11,7 @@ public class MouseLook : MonoBehaviour
     float xRotation = 0f;
 
     bool canRotateMouse = true;
-    public bool canRotateMouseRef 
-    {
+    public bool CanRotateMouse {
         get { return canRotateMouse; }
         set { canRotateMouse = value; }
     }

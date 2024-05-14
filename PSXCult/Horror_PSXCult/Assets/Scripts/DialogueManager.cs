@@ -33,7 +33,7 @@ public class DialogueManager : MonoBehaviour
         speakerText.text = speakerName;
 
         firstPersonController.enabled = false;
-        mouseLook.canRotateMouseRef = false;
+        mouseLook.CanRotateMouse = false;
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -130,12 +130,11 @@ public class DialogueManager : MonoBehaviour
 
     public void DialogueStop() {
         StopAllCoroutines();
-        Debug.Log("stop");
         dialogueText.text = "";
         dialogueParent.SetActive(false);
 
         firstPersonController.enabled = true;
-        mouseLook.canRotateMouseRef = true;
+        mouseLook.CanRotateMouse = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }

@@ -12,7 +12,7 @@ public class GameEvents : MonoBehaviour
     [SerializeField] float mediumFireTime = 10f;
 
     void Start() {
-        StartCoroutine(StartCampFire());
+        //StartCoroutine(StartCampFire());
     }
 
     public IEnumerator StartCampFire() {

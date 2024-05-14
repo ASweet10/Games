@@ -1,16 +1,18 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
 
 public class TextColorLerper : MonoBehaviour
 {
-    SpriteRenderer spriteRenderer;
+    TextMeshPro textGUI;
     Color startColor = new Color(1f, 1f, 1f, 1f);
-    Color endColor = new Color(1f, 1f, 1f, 0.3f);
+    Color endColor = new Color(1f, 1f, 1f, 0f);
     float duration = 5f;
     float t = 0f;
     void Start() {
-        spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+        textGUI = gameObject.GetComponent<TextMeshPro>();
     }
     void Update() {
         LerpColor();
@@ -18,6 +20,6 @@ public class TextColorLerper : MonoBehaviour
 
     void LerpColor() {
         Color newColor = Color.Lerp(startColor, endColor, Mathf.PingPong(Time.time, 1));
-        spriteRenderer.material.color = newColor;
+        textGUI.color = newColor;
     }
 }

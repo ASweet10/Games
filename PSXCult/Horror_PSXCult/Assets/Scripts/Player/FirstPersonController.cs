@@ -71,19 +71,22 @@ public class FirstPersonController : MonoBehaviour
 
     GameController gameController;
     DialogueManager dialogueManager;
-    bool canMove = true;
-    public bool canMoveRef {
-        get { return canMove; }
-        set { canMove = value; }
-    }
     bool playerHoldingGasStationItem = false;
     public bool playerHoldingGasItem {
         get { return playerHoldingGasStationItem; }
         set { playerHoldingGasStationItem = value; }
     }
     bool canSprint = true;
-    bool canJump = true;
-    bool canInteract = true; 
+    bool canMove = true;
+    public bool CanMove {
+        get { return canMove; }
+        set { canMove = value; }
+    }
+    bool canInteract = true;
+    public bool CanInteract {
+        get { return canInteract; }
+        set { canInteract = value;}
+    } 
     
     void Awake() {
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
@@ -101,9 +104,6 @@ public class FirstPersonController : MonoBehaviour
     void Update() {
         if(canMove) {
             HandleMovement();
-        }
-        if(canJump) {
-            HandleJump();
         }
         if(canCrouch) {
             AttemptToCrouch();
@@ -271,8 +271,9 @@ public class FirstPersonController : MonoBehaviour
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
         canMove = false;
+        canInteract = false;
         currentMovement = Vector3.zero;
-        mouseLook.canRotateMouseRef = false;
+        mouseLook.CanRotateMouse = false;
     }
     void HandleStamina() {
         if(currentStamina <= 0) {
@@ -308,5 +309,4 @@ public class FirstPersonController : MonoBehaviour
             }
         }
     }
-    
 }

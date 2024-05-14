@@ -12,9 +12,10 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject popupTextUI;
     [SerializeField] GameObject dialogueUI;
 
+    [SerializeField] GameObject deathUI;
+
 
     [SerializeField] GameObject drinksUI;
-    [SerializeField] GameObject iceCreamUI;
     [SerializeField] GameObject missingOneUI;
     [SerializeField] GameObject missingTwoUI;
     [SerializeField] GameObject missingThreeUI;
@@ -59,7 +60,7 @@ public class GameController : MonoBehaviour
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
             Cursor.lockState = CursorLockMode.None;
             Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
-            Cursor.visible = true;            
+            Cursor.visible = true;
         }
         else {
             Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of game window
@@ -73,10 +74,6 @@ public class GameController : MonoBehaviour
             if(buildIndex == 1) {
                 if(drinksUI.activeInHierarchy) {
                     interactables.ToggleDrinksUI(false);
-                }
-                else if(iceCreamUI.activeInHierarchy) {
-                    interactables.ToggleDrinksUI(false);
-                    //interactables.Disable3DDrinks();
                 }
                 else if(missingOneUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(1, false);
@@ -110,8 +107,9 @@ public class GameController : MonoBehaviour
                     }
                 }
                 */
-                fpController.canMoveRef = true;
-                mouseLook.canRotateMouseRef = true;
+                fpController.CanMove = true;
+                fpController.CanInteract = true;
+                mouseLook.CanRotateMouse = true;
                 Cursor.visible = false;
                 Cursor.lockState = CursorLockMode.Locked;
             }
@@ -149,6 +147,18 @@ public class GameController : MonoBehaviour
         Cursor.lockState = CursorLockMode.None; //Unlock cursor
         Time.timeScale = 0f;
         gamePaused = true;
+    }
+
+    public void HandlePlayerDeath() {
+        deathUI.SetActive(true); // black screen?
+        // timescale = 0
+        // disable main camera, enable deathcamera
+        // enable deathCharacter
+        // play either random animation or one relating to where you were stabbed
+        // after animation is done, you died fades in (red, chainsaw font)
+        // once text fades in, buttons appear? or buttons always visible at bottom?
+        // -buttons at 20% and 80% of screen horizontally and under animation & title
+        // --buttons only text but change color on hover?
     }
 
     /*  IN-GAME  */

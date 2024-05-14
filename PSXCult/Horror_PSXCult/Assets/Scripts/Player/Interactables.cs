@@ -12,6 +12,7 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject missingFourUI;
     [SerializeField] GameObject missingNewsArticle;
     [SerializeField] GameObject UICamera;
+    [SerializeField] TMP_Text interactText;
 
 
     [Header ("Drinks")]
@@ -117,6 +118,7 @@ public class Interactables : MonoBehaviour
             arcadeController.enabled = true;
             firstPersonController.enabled = false;
             mouseLook.enabled = false;
+            interactText.text = "";
             StartCoroutine(StartArcadeGame());
         } else {
             normalCamera.enabled = true;
