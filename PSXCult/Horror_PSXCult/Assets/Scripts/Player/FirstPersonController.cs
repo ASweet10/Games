@@ -67,7 +67,11 @@ public class FirstPersonController : MonoBehaviour
     [Header("Highlights")]
     GameObject lastHighlightedObject;
     [SerializeField] GameObject cursor;
-    [SerializeField] TMP_Text interactText;
+    [SerializeField] TMP_Text interactText; // Text displayed on hover
+    [SerializeField] TMP_Text popupText; // Popup text after interaction
+
+    [Header("Interact Texts")]
+    [SerializeField] string trashString = "It smells awful...";
 
     GameController gameController;
     DialogueManager dialogueManager;
@@ -126,13 +130,6 @@ public class FirstPersonController : MonoBehaviour
         currentMovement.y = currentMovementY;
 
         //HandleStamina();
-    }
-
-    void HandleJump() {
-        if(controller.isGrounded && Input.GetKey(jumpKey)){
-            Debug.Log("jump");
-            currentMovement.y = jumpForce;
-        }
     }
 
     void ApplyFinalMovement() {
@@ -212,6 +209,9 @@ public class FirstPersonController : MonoBehaviour
                             interactables.ToggleDrinksUI(true);
                             DisableMovementDuringUI();
                             break;
+                        case "Trash":
+                            StartCoroutine(DisplayPopupText(trashString));
+                            break;
                         case "Arcade":
                             interactables.ToggleArcade(true);
                             interactables.PlayingArcadeGame = true;
@@ -220,9 +220,23 @@ public class FirstPersonController : MonoBehaviour
                         case "HiddenItem":
                             break;
                         case "Cashier":
-                            var dialogueTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
-                            dialogueTrigger.TriggerDialogue();
+                            var cashierTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
+                            cashierTrigger.TriggerDialogue();
                             Debug.Log("cashier");
+                            break;
+                        case "AJ":
+                            var ajTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
+                            ajTrigger.TriggerDialogue();
+                            break;
+                        case "David":
+                            var davidTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
+                            davidTrigger.TriggerDialogue();
+                            break;
+                        case "Hunter":
+                            var hunterTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
+                            hunterTrigger.TriggerDialogue();
+                            var hunterAI = hitObj.GetComponent<AIHunter>();
+                            hunterAI.RotateAndStartTalking();
                             break;
                         default:
                             ClearHighlighted();
@@ -267,6 +281,12 @@ public class FirstPersonController : MonoBehaviour
         duringCrouchAnimation = false;
     }
 
+    IEnumerator DisplayPopupText(string displayText) {
+        popupText.text = displayText;
+        yield return new WaitForSeconds(3f);
+        popupText.text = "";
+    }
+
     void DisableMovementDuringUI() {
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -289,7 +309,12 @@ public class FirstPersonController : MonoBehaviour
         }
         Debug.Log(currentStamina);
     }
-
+    void HandleJump() {
+        if(controller.isGrounded && Input.GetKey(jumpKey)){
+            Debug.Log("jump");
+            currentMovement.y = jumpForce;
+        }
+    }
     void HandleHeadBobEffect() {
         if(controller.isGrounded) {
             if(left == true) {

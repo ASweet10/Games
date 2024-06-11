@@ -13,6 +13,9 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] Button option1Button;
     [SerializeField] Button option2Button;
     [SerializeField] Button option3Button;
+    [SerializeField] Image option1Image;
+    [SerializeField] Image option2Image;
+    [SerializeField] Image option3Image;
 
     [SerializeField] float typingSpeed = 0.05f;
 
@@ -24,6 +27,11 @@ public class DialogueManager : MonoBehaviour
 
     int currentDialogueIndex = 0;
     bool optionSelected = false;
+
+    bool hasPurchasedGas = false;
+    bool hunterWarningComplete = false;
+    bool holdingGasItem = false;
+    bool playerCaughtStealing = false;
 
     void Start() {
         dialogueParent.SetActive(false); // Hide dialogue by default
@@ -39,18 +47,37 @@ public class DialogueManager : MonoBehaviour
         Cursor.visible = true;
 
         dialogueList = textToPrint;
-
-        // check speaker
-        // switch(cashier)
-        //  if gasPurchased... 
-        //    if itemHeld
-        //       attempt to purchase item (index 11 buy item)
-        //    else
-        //       no item random option (index 10 no item)
-        //   else
-        //       index = 0
-        //       (Player chooses to buy gas with button; event should set gasPurchased = true)
-        currentDialogueIndex = 0;
+        
+        switch(speakerName) {
+            case "Cashier":
+                if(hasPurchasedGas) {
+                    if(holdingGasItem) {
+                        if(playerCaughtStealing) {
+                            currentDialogueIndex = 9; // Steal options
+                        } else {
+                            currentDialogueIndex = 11; // Buy item options
+                        }
+                    } else {
+                        currentDialogueIndex = 10; // No item options
+                    }
+                } else {
+                    currentDialogueIndex = 0; // Can I help you?
+                }
+                break;
+            case "AJ":
+                break;
+            case "David":
+                break;
+            case "Hunter":
+                if(hunterWarningComplete) {
+                    currentDialogueIndex = 11; // Random hunter options
+                    Debug.Log(11);
+                } else {
+                    currentDialogueIndex = 0; // Hunter warning start
+                    Debug.Log(0);
+                }
+                break;
+        }
 
         DisableButtons();
         StartCoroutine(PrintDialogue());
@@ -63,7 +90,7 @@ public class DialogueManager : MonoBehaviour
             line.startDialogueEvent?.Invoke();
 
             if(line.isRandomOption) {
-                yield return StartCoroutine(TypeText(line.randomOptions[Random.Range(0, line.randomOptions.Length - 1)]));
+                yield return StartCoroutine(TypeText(line.randomOptions[Random.Range(0, line.randomOptions.Length)]));
             }
 
             if (line.isQuestion) {
@@ -74,6 +101,10 @@ public class DialogueManager : MonoBehaviour
                 option1Button.interactable = true;
                 option2Button.interactable = true;
                 option3Button.interactable = true;
+
+                option1Button.GetComponentInChildren<DialogueButtonHover>().enabled = true;
+                option2Button.GetComponentInChildren<DialogueButtonHover>().enabled = true;
+                option3Button.GetComponentInChildren<DialogueButtonHover>().enabled = true;
 
                 option1Button.GetComponentInChildren<TMP_Text>().text = line.answerOption1;
                 option2Button.GetComponentInChildren<TMP_Text>().text = line.answerOption2;
@@ -126,6 +157,14 @@ public class DialogueManager : MonoBehaviour
         option1Button.GetComponentInChildren<TMP_Text>().text = "";
         option2Button.GetComponentInChildren<TMP_Text>().text = "";
         option3Button.GetComponentInChildren<TMP_Text>().text = "";
+
+        option1Button.GetComponentInChildren<DialogueButtonHover>().enabled = false;
+        option2Button.GetComponentInChildren<DialogueButtonHover>().enabled = false;
+        option3Button.GetComponentInChildren<DialogueButtonHover>().enabled = false;
+
+        option1Image.enabled = false;
+        option2Image.enabled = false; 
+        option3Image.enabled = false;     
     }
 
     public void DialogueStop() {
@@ -137,5 +176,12 @@ public class DialogueManager : MonoBehaviour
         mouseLook.CanRotateMouse = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+    }
+
+    public void PurchaseGas() {
+        hasPurchasedGas = true;
+    }
+    public void FinishHunterWarning() {
+        hunterWarningComplete = true;
     }
 }

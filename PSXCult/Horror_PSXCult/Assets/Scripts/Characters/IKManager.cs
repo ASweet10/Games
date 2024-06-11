@@ -24,7 +24,7 @@ public class IKManager : MonoBehaviour
         //Debug.Log(pivotRotationY);
 
         float dist = Vector3.Distance(objPivot.transform.position, targetObj.position);
-        Debug.Log(dist);
+        //Debug.Log(dist);
 
         if(pivotRotationY < 0.65f && pivotRotationY > -0.65f && dist < desireDist) {
             lookWeight = Mathf.Lerp(lookWeight, 1, Time.deltaTime * 2.5f);
@@ -35,8 +35,7 @@ public class IKManager : MonoBehaviour
             //lookWeight = 0;
             ikActive = false;
         }
-        animator.SetLookAtWeight(lookWeight);
-        Debug.Log(lookWeight);
+        //animator.SetLookAtWeight(lookWeight); commented out to avoid warning
     }
 
     void OnAnimatorIK() {

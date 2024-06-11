@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class GameEvents : MonoBehaviour
 {
+    [SerializeField] GameObject hunter;
     [SerializeField] GameObject fireSmall;
     [SerializeField] GameObject fireMediumSmoke;
     [SerializeField] GameObject fireBigSmoke;
@@ -23,6 +24,10 @@ public class GameEvents : MonoBehaviour
         yield return new WaitForSecondsRealtime(mediumFireTime);
         Destroy(mediumFire);
         Instantiate(fireBigSmoke, campfirePosition.position, Quaternion.identity);
+    }
+
+    public void SpawnHunterAtCamp() {
+        hunter.SetActive(true);
     }
 
 }

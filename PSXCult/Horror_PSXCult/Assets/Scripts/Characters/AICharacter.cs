@@ -3,55 +3,54 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-public class AIKiller : MonoBehaviour
+public class AICharacter : MonoBehaviour
 {
     [SerializeField] Animator anim;
     [SerializeField] Transform playerTF;
-    [SerializeField] Transform target;
+    [SerializeField] Transform killerTF;
     [SerializeField] Transform[] waypoints;
     Transform tf;
     [SerializeField] float turnSpeed = 60f;
     [SerializeField] float rotationSpeed = 60f;
     [SerializeField] float aiRange = 15f;
-    [SerializeField] float attackRange = 2f;
     bool playerInRange = false;
+    bool killerInRange = false;
+    bool injured = false;
     bool atPathNode = false;
     int currentWP = 0;
 
-    enum State{ idle, searchingForTarget, walkingToWaypoint, chasingTarget, attacking, };
+    enum State{ idle, walking, walkingToWaypoint, talking, running, hiding, injured };
     [SerializeField] State state = State.idle;
 
     void Start () {
-        playerTF = GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
         anim = gameObject.GetComponent<Animator>();
         tf = gameObject.GetComponent<Transform>();
-        target = null;
+        FollowPath(waypoints);
     }
 
     void Update() {
         HandleAIBehavior();
+        if(!injured) {
+            if(playerInRange) {
+                
+            }
+        }
     }
-
     void HandleAIBehavior() {
         switch (state) {
             case State.idle:
                 HandleIdle();
                 break;
-            case State.searchingForTarget:
-                HandleSearchingForTarget();
+            case State.talking:
+                HandleTalking();
                 break;
-            case State.walkingToWaypoint:
-                HandleWaypointNavigation();
-                break;
-            case State.chasingTarget:
-                HandleChaseTarget();
-                break;
-            case State.attacking:
-                if( target != null && Vector3.Distance(tf.position, target.position) <= attackRange) {
-                    HandleAttack();
-                } else {
-
+            case State.walking:
+                if(!CanRotateTowardsWaypoint(waypoints[currentWP])) {
+                    GoToNextNode(waypoints[currentWP]);
                 }
+                break;
+            case State.hiding:
+                HandleHideOnBush();
                 break;
             default:
                 break;
@@ -61,26 +60,31 @@ public class AIKiller : MonoBehaviour
     void HandleIdle() {
         anim.SetBool("isIdle", true);
     }
-    void HandleWaypointNavigation() {
-
-        if(!CanRotateTowardsWaypoint(waypoints[currentWP])) {
-            GoToNextNode(waypoints[currentWP]);
-        }
-        LookAtPlayer();
+    void HandleTalking() {
+        //LookAtPlayer();
+        anim.SetBool("isTalking", true);
         if(!playerInRange) {
             //handle idle?
             // or handle follow player?
             // or handle hide if running from killer?
         }
     }
-    void HandleSearchingForTarget() {
 
+    void HandleWaypointNavigation() {
+        if(!CanRotateTowardsWaypoint(waypoints[currentWP])) {
+            GoToNextNode(waypoints[currentWP]);
+        }
+        //if player not in range...
+        if(!playerInRange) {
+            //handle idle?
+            // or handle follow player?
+            // or handle hide if running from killer?
+        }
     }
-    void HandleChaseTarget() {
-
-    }
-    void HandleAttack() {
-        
+    void HandleHideOnBush() {
+        // find nearest bush you can hide in
+        // If killer not within range, hide there
+        // If killer within range, run away
     }
 
     bool CheckIfCharacterInRange(Transform character) {
