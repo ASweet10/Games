@@ -41,14 +41,10 @@ public class FirstPersonController : MonoBehaviour
     [Header("Audio")]
     AudioSource footstepAudioSource;
 
-
-
     [Header("Stamina")]
     [SerializeField, Range(1, 20)] float maxStamina = 15f;
     [SerializeField] AudioSource windedAudioSource;
     float currentStamina;
-
-
 
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;
@@ -74,6 +70,7 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] string trashString = "It smells awful...";
 
     GameController gameController;
+    GameEvents gameEvents;
     DialogueManager dialogueManager;
     bool playerHoldingGasStationItem = false;
     public bool playerHoldingGasItem {
@@ -98,6 +95,7 @@ public class FirstPersonController : MonoBehaviour
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         dialogueManager = gameObject.GetComponent<DialogueManager>();
         interactables = GameObject.FindGameObjectWithTag("GameController").GetComponent<Interactables>();
+        gameEvents = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameEvents>(); 
     }
 
     void Start() {
@@ -142,11 +140,12 @@ public class FirstPersonController : MonoBehaviour
         controller.Move(currentMovement * Time.deltaTime);
     }
 
-
     void HighlightObject(GameObject hitObj, bool uiEnabled) {
         if (lastHighlightedObject != hitObj) {
             ClearHighlighted();
             lastHighlightedObject = hitObj;
+            var outline = hitObj.GetComponentInChildren<Outline>();
+            outline.enabled = true;
             if(uiEnabled) {
                 interactText.enabled = true;
                 if(hitObj.tag != "Untagged") {
@@ -158,7 +157,6 @@ public class FirstPersonController : MonoBehaviour
             }
         }
     }
-
     void ClearHighlighted() {
         if (lastHighlightedObject != null) {
             //lastHighlightedObject.GetComponent<MeshRenderer>().material = originalMat;
@@ -166,8 +164,7 @@ public class FirstPersonController : MonoBehaviour
             cursor.SetActive(true);
             interactText.enabled = false;
         }
-    } 
-    
+    }    
     void HandleInteraction() {
         float rayDistance = 50f;
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)); // Ray from center of the viewport
@@ -217,6 +214,12 @@ public class FirstPersonController : MonoBehaviour
                             interactables.PlayingArcadeGame = true;
                             DisableMovementDuringUI();
                             break;
+                        case "Firewood":
+                            if(gameEvents.NeedsFirewood) {
+                                gameEvents.HandleCollectFirewood();
+                                hitObj.SetActive(false);
+                            }
+                            break;
                         case "HiddenItem":
                             break;
                         case "Cashier":
@@ -227,25 +230,32 @@ public class FirstPersonController : MonoBehaviour
                         case "AJ":
                             var ajTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
                             ajTrigger.TriggerDialogue();
+                            var ajCharacter = hitObj.GetComponent<AICharacter>();
+                            ajCharacter.RotateAndStartTalking();
                             break;
                         case "David":
                             var davidTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
                             davidTrigger.TriggerDialogue();
+                            var davidCharacter = hitObj.GetComponent<AICharacter>();
+                            davidCharacter.RotateAndStartTalking();
                             break;
                         case "Hunter":
                             var hunterTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
                             hunterTrigger.TriggerDialogue();
-                            var hunterAI = hitObj.GetComponent<AIHunter>();
-                            hunterAI.RotateAndStartTalking();
+                            var hunterCharacter = hitObj.GetComponent<AICharacter>();
+                            hunterCharacter.RotateAndStartTalking();
                             break;
                         default:
                             ClearHighlighted();
                             break;
                     }
                 }
-            }
-            else {
+            } else {
                 ClearHighlighted();
+                if(hitObj.tag != "Untagged") {
+                    var outline = hitObj.GetComponent<Outline>();
+                    outline.enabled = false;
+                }
             }
         }
     }

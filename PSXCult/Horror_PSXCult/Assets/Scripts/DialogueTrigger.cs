@@ -13,13 +13,6 @@ public class DialogueTrigger : MonoBehaviour
     void Start() {
         dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
     }
-    /*
-    void OnTriggerEnter(Collider other) {
-        if(other.CompareTag("Player")){
-            other.gameObject.GetComponent<DialogueManager>().DialogueStart(dialogueStrings);
-        }
-    }
-    */
     public void TriggerDialogue() {
         dialogueManager.DialogueStart(dialogueStrings, speakerName);
     }

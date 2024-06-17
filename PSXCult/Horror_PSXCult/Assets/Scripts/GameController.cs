@@ -97,7 +97,6 @@ public class GameController : MonoBehaviour
                     interactables.ToggleArcade(false);
                     interactables.PlayingArcadeGame = false;
                 }
-                /*
                 else {
                     if(gamePaused) {
                         ResumeGame();
@@ -106,7 +105,6 @@ public class GameController : MonoBehaviour
                         PauseGame();
                     }
                 }
-                */
                 fpController.CanMove = true;
                 fpController.CanInteract = true;
                 mouseLook.CanRotateMouse = true;

@@ -7,6 +7,8 @@ using TMPro;
 
 public class DialogueManager : MonoBehaviour
 {
+    [SerializeField] Camera mainCamera;
+    [SerializeField] GameObject[] characterCameras;
     [SerializeField] GameObject dialogueParent;
     [SerializeField] TMP_Text speakerText;
     [SerializeField] TMP_Text dialogueText;
@@ -17,9 +19,10 @@ public class DialogueManager : MonoBehaviour
     [SerializeField] Image option2Image;
     [SerializeField] Image option3Image;
 
-    [SerializeField] float typingSpeed = 0.05f;
+    [SerializeField] float typingSpeed = 0.1f;
 
     List<dialogueString> dialogueList;
+    [SerializeField] AudioSource typingAudio;
 
     [Header("Player")]
     [SerializeField] FirstPersonController firstPersonController;
@@ -78,7 +81,6 @@ public class DialogueManager : MonoBehaviour
                 }
                 break;
         }
-
         DisableButtons();
         StartCoroutine(PrintDialogue());
     }
@@ -128,6 +130,9 @@ public class DialogueManager : MonoBehaviour
     }
     private IEnumerator TypeText(string text) {
         dialogueText.text = "";
+        if(!typingAudio.isPlaying) {
+            typingAudio.Play();
+        }
         foreach(char letter in text.ToCharArray()) {
             dialogueText.text += letter;
             yield return new WaitForSeconds(typingSpeed);
@@ -139,9 +144,15 @@ public class DialogueManager : MonoBehaviour
 
         if(dialogueList[currentDialogueIndex].isEnd) {
             DialogueStop();
+            if(typingAudio.isPlaying) {
+                typingAudio.Stop();
+            }
         }
 
         currentDialogueIndex++;
+        if(typingAudio.isPlaying) {
+            typingAudio.Stop();
+        }
     }
     void HandleOptionSelected(int indexJump) {
         optionSelected = true;
@@ -171,6 +182,13 @@ public class DialogueManager : MonoBehaviour
         StopAllCoroutines();
         dialogueText.text = "";
         dialogueParent.SetActive(false);
+
+        mainCamera.enabled = true;
+        foreach(GameObject cam in characterCameras) {
+            if(cam.activeInHierarchy) {
+                cam.SetActive(false);
+            }
+        }
 
         firstPersonController.enabled = true;
         mouseLook.CanRotateMouse = true;

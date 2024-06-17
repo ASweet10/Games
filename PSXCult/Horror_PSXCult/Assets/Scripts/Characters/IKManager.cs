@@ -19,6 +19,10 @@ public class IKManager : MonoBehaviour
     }
 
     void Update() {
+        HandleIKAnimation();
+    }
+
+    void HandleIKAnimation() {
         objPivot.transform.LookAt(targetObj);
         float pivotRotationY = objPivot.transform.localRotation.y;
         //Debug.Log(pivotRotationY);
@@ -27,11 +31,11 @@ public class IKManager : MonoBehaviour
         //Debug.Log(dist);
 
         if(pivotRotationY < 0.65f && pivotRotationY > -0.65f && dist < desireDist) {
-            lookWeight = Mathf.Lerp(lookWeight, 1, Time.deltaTime * 2.5f);
+            lookWeight = Mathf.Lerp(lookWeight, 1, Time.deltaTime * 3f);
             //lookWeight = 1;
             ikActive = true;
         } else {
-            lookWeight = Mathf.Lerp(lookWeight, 0, Time.deltaTime * 2.5f);
+            lookWeight = Mathf.Lerp(lookWeight, 0, Time.deltaTime * 3f);
             //lookWeight = 0;
             ikActive = false;
         }
@@ -39,16 +43,9 @@ public class IKManager : MonoBehaviour
     }
 
     void OnAnimatorIK() {
-        if(animator) {
-            if(ikActive) {
-                if(targetObj != null ) {
-                    animator.SetLookAtWeight(1);
-                    animator.SetLookAtPosition(targetObj.position);
-                }
-            }
-            else {
-                animator.SetLookAtWeight(0);
-            }
+        if(targetObj != null ) {
+            animator.SetLookAtWeight(lookWeight);
+            animator.SetLookAtPosition(targetObj.position);
         }
     }
 }

@@ -2,37 +2,57 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-
 public class AICharacter : MonoBehaviour
 {
+    [SerializeField] Camera mainCamera;
+    [SerializeField] GameObject characterCamera;
     [SerializeField] Animator anim;
     [SerializeField] Transform playerTF;
     [SerializeField] Transform killerTF;
     [SerializeField] Transform[] waypoints;
-    Transform tf;
     [SerializeField] float turnSpeed = 60f;
-    [SerializeField] float rotationSpeed = 60f;
-    [SerializeField] float aiRange = 15f;
-    bool playerInRange = false;
-    bool killerInRange = false;
-    bool injured = false;
-    bool atPathNode = false;
-    int currentWP = 0;
+    [SerializeField, Range(1, 5)] float walkSpeed = 2f;
+    [SerializeField, Range(6, 10)] float sprintSpeed = 10f;
 
-    enum State{ idle, walking, walkingToWaypoint, talking, running, hiding, injured };
-    [SerializeField] State state = State.idle;
+    Transform tf;
+    AudioSource footstepAudioSource;
+    bool atWaypoint = false;
+    bool characterMoving = false;
+    int currentWP = 0;
+    public enum State{ idle, walkingToWaypoint, talking, hiding, dead };
+    State state = State.idle;
+    public State StateRef {
+        get { return state; }
+        set { state = value; }
+    }
+
+    enum CharacterType{ AJ, David, Hunter, Killer };
+    [SerializeField] CharacterType characterType = CharacterType.Hunter;
 
     void Start () {
         anim = gameObject.GetComponent<Animator>();
         tf = gameObject.GetComponent<Transform>();
-        FollowPath(waypoints);
+        footstepAudioSource = gameObject.GetComponent<AudioSource>();
+        state = State.walkingToWaypoint;
     }
 
     void Update() {
         HandleAIBehavior();
-        if(!injured) {
-            if(playerInRange) {
-                
+    }
+    void FixedUpdate() {
+        if(characterMoving) {
+            Vector3 direction = waypoints[currentWP].position - tf.position;
+            direction.y = 0;
+            Quaternion rotation = Quaternion.LookRotation(direction);
+            tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * turnSpeed);
+            tf.position += transform.forward * Time.deltaTime * walkSpeed;
+
+            if(!footstepAudioSource.isPlaying) {
+                footstepAudioSource.Play();
+            }
+        } else {
+            if(footstepAudioSource.isPlaying) {
+                footstepAudioSource.Stop();
             }
         }
     }
@@ -44,77 +64,68 @@ public class AICharacter : MonoBehaviour
             case State.talking:
                 HandleTalking();
                 break;
-            case State.walking:
-                if(!CanRotateTowardsWaypoint(waypoints[currentWP])) {
-                    GoToNextNode(waypoints[currentWP]);
-                }
+            case State.walkingToWaypoint:
+                HandleWaypointNavigation();
                 break;
             case State.hiding:
-                HandleHideOnBush();
+                HandleHideBehavior();
                 break;
-            default:
+            case State.dead:
+                HandleDeath();
                 break;
         }
     }
-
     void HandleIdle() {
+        characterMoving = false;
+        anim.SetBool("isWalking", false);
+        anim.SetBool("isTalking", false);
         anim.SetBool("isIdle", true);
     }
     void HandleTalking() {
-        //LookAtPlayer();
+        characterMoving = false;
+        anim.SetBool("isWalking", false);
+        anim.SetBool("isIdle", false);
         anim.SetBool("isTalking", true);
-        if(!playerInRange) {
-            //handle idle?
-            // or handle follow player?
-            // or handle hide if running from killer?
-        }
     }
-
-    void HandleWaypointNavigation() {
-        if(!CanRotateTowardsWaypoint(waypoints[currentWP])) {
-            GoToNextNode(waypoints[currentWP]);
-        }
-        //if player not in range...
-        if(!playerInRange) {
-            //handle idle?
-            // or handle follow player?
-            // or handle hide if running from killer?
-        }
-    }
-    void HandleHideOnBush() {
+    void HandleHideBehavior() {
         // find nearest bush you can hide in
         // If killer not within range, hide there
         // If killer within range, run away
     }
-
-    bool CheckIfCharacterInRange(Transform character) {
-        if(Vector3.Distance(transform.position, character.position) < aiRange) {
-            return true;
-        } else {
-            return false;
-        }
+    void HandleDeath() {
+        anim.SetBool("isWalking", false);
+        anim.SetBool("isIdle", false);
+        anim.SetBool("isTalking", false);
+        anim.SetTrigger("death");
     }
 
-
-    public void FollowPath(Transform[] pathNodes){
-        for(int i = 0; i <= pathNodes.Length - 1; i++) {
-            //tf.Rotate(new Vector3(0, 0, 0));
-        }
-    }
-
-    void GoToNextNode(Transform node) {
-        if(!atPathNode) {
-            atPathNode = false;
-            // Rotate towards wp
-            //tf.Rotate(new Vector3(0, node.position.y, 0));
-
-
-            //Move towards wp
-            anim.SetBool("isWalking", true);
-            anim.SetBool("isIdle", false);
-            if(Vector3.Distance(node.position, tf.position) <= 1f){
-                atPathNode = true;
+    void HandleWaypointNavigation() {
+        if (currentWP != waypoints.Length) {
+            if (!atWaypoint) {
+                if(!CanRotateTowardsWaypoint(waypoints[currentWP])) {
+                    GoToNextWaypoint(waypoints[currentWP]);
+                }
             }
+        } else {
+            state = State.idle;
+        }
+    }
+    void GoToNextWaypoint(Transform wp) {
+        atWaypoint = false;
+        anim.SetBool("isIdle", false);
+        anim.SetBool("isWalking", true);
+
+        if(Vector3.Distance(tf.position, wp.position) <= 1f){
+            atWaypoint = true;
+            currentWP ++;
+            if(currentWP >= waypoints.Length) {
+                characterMoving = false;
+                state = State.idle;
+            } else {
+                GoToNextWaypoint(waypoints[currentWP]);
+            }
+        } else {
+            characterMoving = true;
         }
     }
 
@@ -134,10 +145,16 @@ public class AICharacter : MonoBehaviour
         }
     }
 
-    void LookAtPlayer() {
+    public void RotateAndStartTalking() {
         Vector3 targetPosition = playerTF.position - tf.position;
-        targetPosition.y = 0;
-        var rotation = Quaternion.LookRotation(targetPosition);
-        transform.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * rotationSpeed);
+        //Quaternion rotation = Quaternion.LookRotation(targetPosition);
+        //tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * turnSpeed);
+        //tf.rotation = rotation;
+        tf.LookAt(playerTF);
+
+        //mainCamera.transform.position = cameraPosition.position;
+        state = State.talking;
+        characterCamera.SetActive(true);
+        mainCamera.enabled = false;
     }
 }
