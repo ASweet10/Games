@@ -32,19 +32,23 @@ public class FirstPersonController : MonoBehaviour
     [Header("Movement")]
     [SerializeField, Range(3, 5)] float walkSpeed = 5f;
     [SerializeField, Range(6, 10)] float sprintSpeed = 10f;
-    float runMultiplier;
     float gravityValue = 9.8f;
-    float verticalSpeed;
     Vector2 currentInput;
     Vector3 currentMovement;
 
     [Header("Audio")]
     AudioSource footstepAudioSource;
 
-    [Header("Stamina")]
+
+    [Header("Health & Stamina")]
     [SerializeField, Range(1, 20)] float maxStamina = 15f;
     [SerializeField] AudioSource windedAudioSource;
+    [SerializeField] GameObject bleedingUI;
+    [SerializeField] RawImage bloodParticles;
+    [SerializeField] RawImage bloodTint;
     float currentStamina;
+    int maxHealth = 3;
+    int currentHealth;
 
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;
@@ -99,9 +103,9 @@ public class FirstPersonController : MonoBehaviour
     }
 
     void Start() {
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.Locked;
+        //DisablePlayerMovement(false);
         currentStamina = maxStamina;
+        currentHealth = maxHealth;
     }
     void Update() {
         if(canMove) {
@@ -145,7 +149,10 @@ public class FirstPersonController : MonoBehaviour
             ClearHighlighted();
             lastHighlightedObject = hitObj;
             var outline = hitObj.GetComponentInChildren<Outline>();
-            outline.enabled = true;
+            if(outline != null) {
+                outline.enabled = true;
+            }
+
             if(uiEnabled) {
                 interactText.enabled = true;
                 if(hitObj.tag != "Untagged") {
@@ -184,27 +191,27 @@ public class FirstPersonController : MonoBehaviour
                             break;
                         case "MissingPosterOne":
                             interactables.ToggleMissingUI(1, true);
-                            DisableMovementDuringUI();
+                            DisablePlayerMovement(true);
                             break;
                         case "MissingPosterTwo":
                             interactables.ToggleMissingUI(2, true);
-                            DisableMovementDuringUI();
+                            DisablePlayerMovement(true);
                             break;
                         case "MissingPosterThree":
                             interactables.ToggleMissingUI(3, true);
-                            DisableMovementDuringUI();
+                            DisablePlayerMovement(true);
                             break;
                         case "MissingPosterFour":
                             interactables.ToggleMissingUI(4, true);
-                            DisableMovementDuringUI();
+                            DisablePlayerMovement(true);
                             break;
                         case "MissingNewsArticle":
                             interactables.ToggleMissingUI(5, true);
-                            DisableMovementDuringUI();
+                            DisablePlayerMovement(true);
                             break;
                         case "Drinks":
                             interactables.ToggleDrinksUI(true);
-                            DisableMovementDuringUI();
+                            DisablePlayerMovement(true);
                             break;
                         case "Trash":
                             StartCoroutine(DisplayPopupText(trashString));
@@ -212,7 +219,7 @@ public class FirstPersonController : MonoBehaviour
                         case "Arcade":
                             interactables.ToggleArcade(true);
                             interactables.PlayingArcadeGame = true;
-                            DisableMovementDuringUI();
+                            DisablePlayerMovement(true);
                             break;
                         case "Firewood":
                             if(gameEvents.NeedsFirewood) {
@@ -221,6 +228,8 @@ public class FirstPersonController : MonoBehaviour
                             }
                             break;
                         case "HiddenItem":
+                            break;
+                        case "CarKeys":
                             break;
                         case "Cashier":
                             var cashierTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
@@ -254,12 +263,37 @@ public class FirstPersonController : MonoBehaviour
                 ClearHighlighted();
                 if(hitObj.tag != "Untagged") {
                     var outline = hitObj.GetComponent<Outline>();
-                    outline.enabled = false;
+                    if(outline != null) {
+                        outline.enabled = false;
+                    }
+
                 }
             }
         }
     }
-    
+
+    IEnumerator DisplayPopupText(string displayText) {
+        popupText.text = displayText;
+        yield return new WaitForSeconds(3f);
+        popupText.text = "";
+    }
+    public void DisablePlayerMovement(bool disableMovement) {
+        if (disableMovement) {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+            canMove = false;
+            canInteract = false;
+            mouseLook.CanRotateMouse = false;   
+            currentMovement = Vector3.zero;
+        } else {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+            canMove = true;
+            canInteract = true;
+            mouseLook.CanRotateMouse = true;
+        }
+    }
+
     public void AttemptToCrouch() {
         if(!duringCrouchAnimation && controller.isGrounded) {
             if(Input.GetKeyDown(KeyCode.C)) {
@@ -291,20 +325,39 @@ public class FirstPersonController : MonoBehaviour
         duringCrouchAnimation = false;
     }
 
-    IEnumerator DisplayPopupText(string displayText) {
-        popupText.text = displayText;
-        yield return new WaitForSeconds(3f);
-        popupText.text = "";
+    public void TakeDamage() {
+        currentHealth --;
+        switch(currentHealth) {
+            case 2:
+                bleedingUI.SetActive(true);
+                float alpha2 = 0.5f;
+                Color particleColor = bloodParticles.color;
+                particleColor.a = alpha2;
+                bloodParticles.color = particleColor;
+
+                Color bloodTintColor = bloodTint.color;
+                bloodTintColor.a = alpha2;
+                bloodTint.color = bloodTintColor;
+                break;
+            case 1:
+                bleedingUI.SetActive(true);
+                float alpha1 = 1f;
+                particleColor = bloodParticles.color;
+                particleColor.a = alpha1;
+                bloodParticles.color = particleColor;
+
+                bloodTintColor = bloodTint.color;
+                bloodTintColor.a = alpha1;
+                bloodTint.color = bloodTintColor;
+                // heavy breathing audio? 
+                break;
+            case 0:
+                bleedingUI.SetActive(false);
+                gameController.HandlePlayerDeath();
+                break;
+        }
     }
 
-    void DisableMovementDuringUI() {
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        canMove = false;
-        canInteract = false;
-        currentMovement = Vector3.zero;
-        mouseLook.CanRotateMouse = false;
-    }
     void HandleStamina() {
         if(currentStamina <= 0) {
             windedAudioSource.Play();
@@ -318,12 +371,6 @@ public class FirstPersonController : MonoBehaviour
             }
         }
         Debug.Log(currentStamina);
-    }
-    void HandleJump() {
-        if(controller.isGrounded && Input.GetKey(jumpKey)){
-            Debug.Log("jump");
-            currentMovement.y = jumpForce;
-        }
     }
     void HandleHeadBobEffect() {
         if(controller.isGrounded) {

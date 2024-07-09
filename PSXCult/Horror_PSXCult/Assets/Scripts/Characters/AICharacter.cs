@@ -146,11 +146,12 @@ public class AICharacter : MonoBehaviour
     }
 
     public void RotateAndStartTalking() {
-        Vector3 targetPosition = playerTF.position - tf.position;
+        //Vector3 targetPosition = playerTF.position - tf.position;
         //Quaternion rotation = Quaternion.LookRotation(targetPosition);
         //tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * turnSpeed);
         //tf.rotation = rotation;
         tf.LookAt(playerTF);
+        tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
 
         //mainCamera.transform.position = cameraPosition.position;
         state = State.talking;

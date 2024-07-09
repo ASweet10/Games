@@ -5,33 +5,29 @@ using UnityEngine;
 public class AIKiller : MonoBehaviour
 {
     [SerializeField] Animator anim;
-    FieldOfView fovScript;
     [SerializeField] Transform playerTF;
+    [SerializeField] FirstPersonController fpController;
     Transform tf;
+    FieldOfView fovScript;
+    CharacterController controller;
 
     [Header("Movement")]
-    CharacterController controller;
-    [SerializeField, Range(3, 5)] float walkSpeed = 5f;
+    [SerializeField, Range(1, 5)] float walkSpeed = 2f;
     [SerializeField, Range(6, 10)] float sprintSpeed = 10f;
-    float runMultiplier;
-    float gravityValue = 9.8f;
-    float verticalSpeed;
-    Vector2 currentInput;
-    Vector3 currentMovement;
 
     [Header("Ranges")]
     [SerializeField] float chaseRange = 10f; // If player within range & visible, chase
-    [SerializeField] float attackRange = 3f; // If player within range, attack
+    [SerializeField] float attackRange = 4f; // If player within range, attack
 
     enum State{ idle, chasingPlayer, attacking, searchingBushes, investigatingNoise };
     [SerializeField] State state = State.idle;
-
     void Start () {
         playerTF = GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
+        fpController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
         fovScript = gameObject.GetComponent<FieldOfView>();
-        controller = gameObject.GetComponent<CharacterController>();
         anim = gameObject.GetComponent<Animator>();
         tf = gameObject.GetComponent<Transform>();
+        controller = gameObject.GetComponent<CharacterController>();
     }
 
     void Update() {
@@ -42,26 +38,15 @@ public class AIKiller : MonoBehaviour
         switch (state) {
             case State.idle:
                 HandleIdle();
-                if(CheckIfPlayerInRange(playerTF, chaseRange)) {
-                    if(fovScript.canSeePlayer) {
-                        state = State.chasingPlayer;
-                    }
-                }
                 break;
             case State.chasingPlayer:
-                if(Vector3.Distance(tf.position, playerTF.position) < chaseRange) {
-                    HandleChaseTarget();
-                } else {
-
-                }
+                HandleChaseTarget();
                 break;
             case State.attacking:
-                if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
-                    HandleAttack();
-                } else {
-                    //if player dead, stop attacking / go idle?
-                    state = State.chasingPlayer;
-                }
+                HandleAttack();
+                break;
+            case State.searchingBushes:
+                HandleSearch();
                 break;
             default:
                 break;
@@ -69,30 +54,70 @@ public class AIKiller : MonoBehaviour
     }
 
     void HandleIdle() {
-        anim.SetBool("isIdle", true);
+        anim.SetBool("searching", false);
+        anim.SetBool("chasing", false);
+        anim.SetBool("idle", true);
+
+        if(Vector3.Distance(tf.position, playerTF.position) <= chaseRange) {
+            if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
+                state = State.attacking;
+            } else {
+                if(fovScript.canSeePlayer) {
+                    state = State.chasingPlayer;
+                }
+            }
+        }        
     }
     void HandleChaseTarget() {
-        if(Vector3.Distance(tf.position, playerTF.position) < chaseRange) { // If in range of player...
-            state = State.chasingPlayer;
+        if(Vector3.Distance(tf.position, playerTF.position) <= chaseRange) {
+            tf.LookAt(playerTF);
+            tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
+
+            Vector3 currentMovement = playerTF.position - tf.position;
+            currentMovement = currentMovement.normalized * walkSpeed;
+   
+            if(!controller.isGrounded){
+                Debug.Log("airborne");
+                currentMovement.y -= 9.8f * Time.deltaTime; // Apply gravity
+                if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
+                    currentMovement.y = 0;
+                }
+            }
+            anim.SetBool("chasing", true);
+            controller.Move(currentMovement * Time.deltaTime);
+
+            if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
+                state = State.attacking;
+                Debug.Log("attack");
+            }
+        } else {
+            state = State.idle;
         }
     }
     void HandleAttack() {
-        Debug.Log("attacking");
-        anim.SetTrigger("Stab");
-    }
+        if(Vector3.Distance(tf.position, playerTF.position) <= 4) {
+            //Vector3 direction = (playerTF.position - tf.position).normalized;
+            //Quaternion rotation = Quaternion.LookRotation(direction);
+            //tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * 60);
+            tf.LookAt(playerTF);
+            tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
 
-    bool CheckIfPlayerInRange(Transform character, float range) {
-        if(Vector3.Distance(transform.position, character.position) < chaseRange) {
-            return true;
+            anim.SetBool("searching", false);
+            anim.SetBool("chasing", false);
+            anim.SetBool("idle", true);
+            anim.SetTrigger("Stab");
+            if(Vector3.Distance(tf.position, playerTF.position) <= 3) {
+                fpController.TakeDamage();
+            }
         } else {
-            return false;
+            //if player dead, stop attacking / go idle?
+            state = State.chasingPlayer;
         }
     }
 
-    public void FollowPath(Transform[] pathNodes){
-        for(int i = 0; i <= pathNodes.Length - 1; i++) {
-            //tf.Rotate(new Vector3(0, 0, 0));
-        }
+    void HandleSearch() {
+        anim.SetBool("chasing", false);
+        anim.SetBool("idle", false);
+        anim.SetBool("searching", true);
     }
-
 }

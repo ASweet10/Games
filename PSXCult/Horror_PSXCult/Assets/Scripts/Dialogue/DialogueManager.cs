@@ -130,12 +130,12 @@ public class DialogueManager : MonoBehaviour
     }
     private IEnumerator TypeText(string text) {
         dialogueText.text = "";
-        if(!typingAudio.isPlaying) {
-            typingAudio.Play();
-        }
         foreach(char letter in text.ToCharArray()) {
             dialogueText.text += letter;
             yield return new WaitForSeconds(typingSpeed);
+            if(!typingAudio.isPlaying) {
+                typingAudio.Play();
+            }
         }
         
         if(!dialogueList[currentDialogueIndex].isQuestion) {

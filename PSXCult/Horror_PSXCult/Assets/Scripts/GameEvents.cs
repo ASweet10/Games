@@ -30,7 +30,7 @@ public class GameEvents : MonoBehaviour
     [SerializeField] GameObject davidRef;
 
     void Start() {
-        TransitionToNighttime();
+        //TransitionToNighttime();
     }
     public IEnumerator StartCampFire() {
         var smallFire = Instantiate(fireSmall, campfirePosition.position, Quaternion.identity);
@@ -41,6 +41,19 @@ public class GameEvents : MonoBehaviour
         Destroy(mediumFire);
         Instantiate(fireBigSmoke, campfirePosition.position, Quaternion.identity);
     }
+    public void HandleCollectFirewood() {
+        firewoodCount ++;
+        if(firewoodCount >= firewoodMax) {
+            firewoodCount = 6;
+            needsFirewood = false;
+            foreach(GameObject wood in firewood) {
+                wood.tag = "";
+                var outline = wood.GetComponent<Outline>();
+                outline.enabled = false;
+            }
+        }
+    }
+
     public void SpawnHunterAtCamp() {
         hunter.SetActive(true);
     }
@@ -54,17 +67,5 @@ public class GameEvents : MonoBehaviour
         davidRef.tag = "Untagged"; // Set tag to null; disable dialog
         var davidCharacter = davidRef.GetComponent<AICharacter>();
         davidCharacter.StateRef = AICharacter.State.dead;
-    }
-    public void HandleCollectFirewood() {
-        firewoodCount ++;
-        if(firewoodCount >= firewoodMax) {
-            firewoodCount = 6;
-            needsFirewood = false;
-            foreach(GameObject wood in firewood) {
-                wood.tag = "";
-                var outline = wood.GetComponent<Outline>();
-                outline.enabled = false;
-            }
-        }
     }
 }

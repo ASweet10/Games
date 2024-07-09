@@ -6,14 +6,12 @@ using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
+    [SerializeField] GameObject playerRef;
     [SerializeField] GameObject pauseMenuUI;
     [SerializeField] GameObject cursorUI;
     [SerializeField] GameObject quitGameOptionUI;
     [SerializeField] GameObject popupTextUI;
     [SerializeField] GameObject dialogueUI;
-
-    [SerializeField] GameObject deathUI;
-
 
     [SerializeField] GameObject drinksUI;
     [SerializeField] GameObject missingOneUI;
@@ -22,11 +20,11 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject missingFourUI;
     [SerializeField] GameObject missingNewsArticle;
 
-
+    [Header("Objectives")]
     [SerializeField] Text popupText;
     [SerializeField] Text objectiveText;
 
-    public int currentCheckpoint;
+    public int currentCheckpoint = 0;
     public bool gamePaused = false;
     SceneFader sceneFader;
     Interactables interactables;
@@ -35,7 +33,16 @@ public class GameController : MonoBehaviour
     [SerializeField] DialogueManager dialogueManager;
 
     [SerializeField] string[] gameObjectives;
+    [SerializeField] Transform[] restartPositions;
 
+    [Header ("Player Death")]
+    [SerializeField] Camera mainCamera;
+    [SerializeField] Camera deathCamera;
+    [SerializeField] GameObject playerDeath3DObject;
+    [SerializeField] AnimationClip[] playerDeathClips;
+    [SerializeField] Animator playerDeathAnimator;
+    [SerializeField] GameObject bloodPool;
+    [SerializeField] GameObject deathUI;
 
     [Header ("Main Menu")]
     [SerializeField] GameObject mainMenuUI;
@@ -55,8 +62,7 @@ public class GameController : MonoBehaviour
         dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
     }
     void Start() {
-        currentCheckpoint = 0;
-
+        /*
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
             Cursor.lockState = CursorLockMode.None;
             Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
@@ -65,6 +71,10 @@ public class GameController : MonoBehaviour
         else {
             Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of game window
         }
+        */
+
+        
+        //StartCoroutine(HandlePlayerDeath());
     }
 
     void Update() {
@@ -105,11 +115,7 @@ public class GameController : MonoBehaviour
                         PauseGame();
                     }
                 }
-                fpController.CanMove = true;
-                fpController.CanInteract = true;
-                mouseLook.CanRotateMouse = true;
-                Cursor.visible = false;
-                Cursor.lockState = CursorLockMode.Locked;
+                fpController.DisablePlayerMovement(false);
             }
         }
     }
@@ -122,10 +128,6 @@ public class GameController : MonoBehaviour
         popupText.enabled = true;
         yield return new WaitForSeconds(delay);
         popupText.enabled = false;
-    }
-
-    public void LoadLevel(int levelNumber) {
-        SceneManager.LoadScene(levelNumber);
     }
 
     public void ResumeGame() {
@@ -147,16 +149,26 @@ public class GameController : MonoBehaviour
         gamePaused = true;
     }
 
-    public void HandlePlayerDeath() {
-        deathUI.SetActive(true); // black screen?
-        // timescale = 0
-        // disable main camera, enable deathcamera
-        // enable deathCharacter
-        // play either random animation or one relating to where you were stabbed
-        // after animation is done, you died fades in (red, chainsaw font)
-        // once text fades in, buttons appear? or buttons always visible at bottom?
-        // -buttons at 20% and 80% of screen horizontally and under animation & title
-        // --buttons only text but change color on hover?
+    public IEnumerator HandlePlayerDeath() {
+        fpController.DisablePlayerMovement(true);
+        deathCamera.enabled = true;
+        mainCamera.enabled = false;
+        deathUI.SetActive(true);
+        playerDeath3DObject.SetActive(true);
+
+        int deathClipIndex = Random.Range(0, playerDeathClips.Length - 1);
+        deathClipIndex = 3;
+        playerDeathAnimator.SetInteger("deathClipIndex", deathClipIndex);
+        Debug.Log(deathClipIndex);
+
+        yield return new WaitForSeconds(5f);
+        if(deathClipIndex == 2) {
+            bloodPool.SetActive(true);
+        }
+    }
+    public void ReplayFromDeath() {
+        playerRef.transform.position = restartPositions[currentCheckpoint].position;
+        playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
     }
 
     /*  IN-GAME  */
@@ -195,5 +207,4 @@ public class GameController : MonoBehaviour
             mainMenuUI.SetActive(true);
         }
     }
-
 }
