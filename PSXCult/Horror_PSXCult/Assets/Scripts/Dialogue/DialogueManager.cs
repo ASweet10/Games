@@ -7,8 +7,6 @@ using TMPro;
 
 public class DialogueManager : MonoBehaviour
 {
-    [SerializeField] Camera mainCamera;
-    [SerializeField] GameObject[] characterCameras;
     [SerializeField] GameObject dialogueParent;
     [SerializeField] TMP_Text speakerText;
     [SerializeField] TMP_Text dialogueText;
@@ -125,7 +123,6 @@ public class DialogueManager : MonoBehaviour
             line.endDialogueEvent?.Invoke();
             optionSelected = false;
         }
-
         DialogueStop();
     }
     private IEnumerator TypeText(string text) {
@@ -144,9 +141,6 @@ public class DialogueManager : MonoBehaviour
 
         if(dialogueList[currentDialogueIndex].isEnd) {
             DialogueStop();
-            if(typingAudio.isPlaying) {
-                typingAudio.Stop();
-            }
         }
 
         currentDialogueIndex++;
@@ -183,13 +177,9 @@ public class DialogueManager : MonoBehaviour
         dialogueText.text = "";
         dialogueParent.SetActive(false);
 
-        mainCamera.enabled = true;
-        foreach(GameObject cam in characterCameras) {
-            if(cam.activeInHierarchy) {
-                cam.SetActive(false);
-            }
+        if(typingAudio.isPlaying) {
+            typingAudio.Stop();
         }
-
         firstPersonController.enabled = true;
         mouseLook.CanRotateMouse = true;
         Cursor.lockState = CursorLockMode.Locked;

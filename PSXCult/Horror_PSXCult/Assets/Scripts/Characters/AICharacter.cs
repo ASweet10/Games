@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class AICharacter : MonoBehaviour
 {
-    [SerializeField] Camera mainCamera;
-    [SerializeField] GameObject characterCamera;
     [SerializeField] Animator anim;
     [SerializeField] Transform playerTF;
     [SerializeField] Transform killerTF;
@@ -26,14 +24,18 @@ public class AICharacter : MonoBehaviour
         set { state = value; }
     }
 
-    enum CharacterType{ AJ, David, Hunter, Killer };
+    enum CharacterType{ Friend, Hunter };
     [SerializeField] CharacterType characterType = CharacterType.Hunter;
 
     void Start () {
         anim = gameObject.GetComponent<Animator>();
         tf = gameObject.GetComponent<Transform>();
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
-        state = State.walkingToWaypoint;
+        if(characterType == CharacterType.Hunter) {
+            state = State.walkingToWaypoint;
+        } else {
+            state = State.idle;
+        }
     }
 
     void Update() {
@@ -57,46 +59,42 @@ public class AICharacter : MonoBehaviour
         }
     }
     void HandleAIBehavior() {
-        switch (state) {
-            case State.idle:
-                HandleIdle();
+        switch (characterType) {
+
+            case CharacterType.Hunter:
+                switch (state) {
+                    case State.idle:
+                        HandleIdle();
+                        break;
+                    case State.talking:
+                        HandleTalking();
+                        break;
+                    case State.walkingToWaypoint:
+                        HandleWaypointNavigation();
+                        break;
+                }
                 break;
-            case State.talking:
-                HandleTalking();
-                break;
-            case State.walkingToWaypoint:
-                HandleWaypointNavigation();
-                break;
-            case State.hiding:
-                HandleHideBehavior();
-                break;
-            case State.dead:
-                HandleDeath();
+
+            case CharacterType.Friend:
+                switch (state) {
+                    case State.idle:
+                        HandleIdle();
+                        break;
+                    case State.talking:
+                        HandleTalking();
+                        break;
+                    case State.walkingToWaypoint:
+                        HandleWaypointNavigation();
+                        break;
+                    case State.hiding:
+                        HandleHideBehavior();
+                        break;
+                    case State.dead:
+                        HandleDeath();
+                        break;
+                }
                 break;
         }
-    }
-    void HandleIdle() {
-        characterMoving = false;
-        anim.SetBool("isWalking", false);
-        anim.SetBool("isTalking", false);
-        anim.SetBool("isIdle", true);
-    }
-    void HandleTalking() {
-        characterMoving = false;
-        anim.SetBool("isWalking", false);
-        anim.SetBool("isIdle", false);
-        anim.SetBool("isTalking", true);
-    }
-    void HandleHideBehavior() {
-        // find nearest bush you can hide in
-        // If killer not within range, hide there
-        // If killer within range, run away
-    }
-    void HandleDeath() {
-        anim.SetBool("isWalking", false);
-        anim.SetBool("isIdle", false);
-        anim.SetBool("isTalking", false);
-        anim.SetTrigger("death");
     }
 
     void HandleWaypointNavigation() {
@@ -146,16 +144,35 @@ public class AICharacter : MonoBehaviour
     }
 
     public void RotateAndStartTalking() {
-        //Vector3 targetPosition = playerTF.position - tf.position;
-        //Quaternion rotation = Quaternion.LookRotation(targetPosition);
-        //tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * turnSpeed);
-        //tf.rotation = rotation;
-        tf.LookAt(playerTF);
-        tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
+        Vector3 targetPosition = playerTF.position - tf.position;
+        Quaternion rotation = Quaternion.LookRotation(targetPosition);
+        tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * turnSpeed);
+        tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, 0);
 
-        //mainCamera.transform.position = cameraPosition.position;
         state = State.talking;
-        characterCamera.SetActive(true);
-        mainCamera.enabled = false;
+    }
+
+    void HandleIdle() {
+        characterMoving = false;
+        anim.SetBool("isWalking", false);
+        anim.SetBool("isTalking", false);
+        anim.SetBool("isIdle", true);
+    }
+    void HandleTalking() {
+        characterMoving = false;
+        anim.SetBool("isWalking", false);
+        anim.SetBool("isIdle", false);
+        anim.SetBool("isTalking", true);
+    }
+    void HandleHideBehavior() {
+        // find nearest bush you can hide in
+        // If killer not within range, hide there
+        // If killer within range, run away
+    }
+    void HandleDeath() {
+        anim.SetBool("isWalking", false);
+        anim.SetBool("isIdle", false);
+        anim.SetBool("isTalking", false);
+        anim.SetTrigger("death");
     }
 }

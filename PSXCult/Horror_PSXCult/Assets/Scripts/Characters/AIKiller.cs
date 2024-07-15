@@ -16,7 +16,7 @@ public class AIKiller : MonoBehaviour
     [SerializeField, Range(6, 10)] float sprintSpeed = 10f;
 
     [Header("Ranges")]
-    [SerializeField] float chaseRange = 10f; // If player within range & visible, chase
+    [SerializeField] float chaseRange = 20f; // If player within range & visible, chase
     [SerializeField] float attackRange = 4f; // If player within range, attack
 
     enum State{ idle, chasingPlayer, attacking, searchingBushes, investigatingNoise };
@@ -77,7 +77,7 @@ public class AIKiller : MonoBehaviour
             currentMovement = currentMovement.normalized * walkSpeed;
    
             if(!controller.isGrounded){
-                Debug.Log("airborne");
+                //Debug.Log("airborne");
                 currentMovement.y -= 9.8f * Time.deltaTime; // Apply gravity
                 if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
                     currentMovement.y = 0;
@@ -118,6 +118,7 @@ public class AIKiller : MonoBehaviour
     void HandleSearch() {
         anim.SetBool("chasing", false);
         anim.SetBool("idle", false);
+        anim.ResetTrigger("Stab");
         anim.SetBool("searching", true);
     }
 }

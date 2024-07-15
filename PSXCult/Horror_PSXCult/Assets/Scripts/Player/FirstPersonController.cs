@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -49,6 +50,7 @@ public class FirstPersonController : MonoBehaviour
     float currentStamina;
     int maxHealth = 3;
     int currentHealth;
+    bool canTakeDamage = true;
 
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;
@@ -326,36 +328,38 @@ public class FirstPersonController : MonoBehaviour
     }
 
     public void TakeDamage() {
+        if(canTakeDamage) {
+            StartCoroutine(TakeDamageAndWait());
+        }
+    }
+    IEnumerator TakeDamageAndWait() {
+        canTakeDamage = false;
         currentHealth --;
+        Debug.Log("health: " + currentHealth);
         switch(currentHealth) {
             case 2:
                 bleedingUI.SetActive(true);
-                float alpha2 = 0.5f;
+                float alpha2 = 125f;
                 Color particleColor = bloodParticles.color;
                 particleColor.a = alpha2;
                 bloodParticles.color = particleColor;
-
-                Color bloodTintColor = bloodTint.color;
-                bloodTintColor.a = alpha2;
-                bloodTint.color = bloodTintColor;
                 break;
             case 1:
                 bleedingUI.SetActive(true);
-                float alpha1 = 1f;
+                float alpha1 = 250f;
                 particleColor = bloodParticles.color;
                 particleColor.a = alpha1;
                 bloodParticles.color = particleColor;
-
-                bloodTintColor = bloodTint.color;
-                bloodTintColor.a = alpha1;
-                bloodTint.color = bloodTintColor;
                 // heavy breathing audio? 
                 break;
-            case 0:
+            case int currentHealth when currentHealth <= 0:
                 bleedingUI.SetActive(false);
                 gameController.HandlePlayerDeath();
                 break;
         }
+
+        yield return new WaitForSeconds(2);
+        canTakeDamage = true;
     }
 
     void HandleStamina() {

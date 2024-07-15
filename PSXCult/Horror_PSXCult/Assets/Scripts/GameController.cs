@@ -150,6 +150,7 @@ public class GameController : MonoBehaviour
     }
 
     public IEnumerator HandlePlayerDeath() {
+        Debug.Log("Player dead");
         fpController.DisablePlayerMovement(true);
         deathCamera.enabled = true;
         mainCamera.enabled = false;
@@ -190,21 +191,19 @@ public class GameController : MonoBehaviour
         if(!audioSource.isPlaying) {
             audioSource.Play();
         }
+        //Fade to black
         yield return new WaitForSeconds(2.5f);
+        //Fade in from black
+        //Play music
+        //Cutscene watching player drive away
+        //Credits scroll down screen
     }
-
-    /*  MENUS  */
 
     public void PlayGameButton() {
         StartCoroutine(sceneFader.FadeOutThenLoadScene(1));
     }
-    public void ToggleCreditsUI(bool creditsActive) {
-        if(creditsActive) {
-            mainMenuUI.SetActive(false);
-            creditsUI.SetActive(true);
-        } else {
-            creditsUI.SetActive(false);
-            mainMenuUI.SetActive(true);
-        }
+
+    public void ReturnToMenuAfterCredits() {
+        StartCoroutine(sceneFader.FadeOutThenLoadScene(0));
     }
 }

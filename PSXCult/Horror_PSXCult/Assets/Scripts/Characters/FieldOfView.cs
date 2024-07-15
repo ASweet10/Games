@@ -42,7 +42,7 @@ public class FieldOfView : MonoBehaviour
 
                 if(!Physics.Raycast(transform.position, directionToTarget, distanceToTarget, obstacleMask)){
                     canSeePlayer = true;
-                    Debug.Log("Can see player");
+                    //Debug.Log("Can see player");
                 } else {
                     canSeePlayer = false;
                 }
