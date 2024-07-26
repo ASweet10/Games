@@ -66,7 +66,7 @@ public class AIKiller : MonoBehaviour
                     state = State.chasingPlayer;
                 }
             }
-        }        
+        }
     }
     void HandleChaseTarget() {
         if(Vector3.Distance(tf.position, playerTF.position) <= chaseRange) {

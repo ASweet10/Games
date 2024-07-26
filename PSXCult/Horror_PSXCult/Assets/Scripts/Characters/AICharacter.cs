@@ -24,14 +24,16 @@ public class AICharacter : MonoBehaviour
         set { state = value; }
     }
 
-    enum CharacterType{ Friend, Hunter };
+    enum CharacterType{ Friend, Hunter, Cashier };
     [SerializeField] CharacterType characterType = CharacterType.Hunter;
 
     void Start () {
         anim = gameObject.GetComponent<Animator>();
         tf = gameObject.GetComponent<Transform>();
-        footstepAudioSource = gameObject.GetComponent<AudioSource>();
-        if(characterType == CharacterType.Hunter) {
+
+        if(characterType != CharacterType.Cashier) {
+            footstepAudioSource = gameObject.GetComponent<AudioSource>();
+        } else if(characterType == CharacterType.Hunter){
             state = State.walkingToWaypoint;
         } else {
             state = State.idle;
@@ -42,21 +44,24 @@ public class AICharacter : MonoBehaviour
         HandleAIBehavior();
     }
     void FixedUpdate() {
-        if(characterMoving) {
-            Vector3 direction = waypoints[currentWP].position - tf.position;
-            direction.y = 0;
-            Quaternion rotation = Quaternion.LookRotation(direction);
-            tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * turnSpeed);
-            tf.position += transform.forward * Time.deltaTime * walkSpeed;
+        if(characterType != CharacterType.Cashier) {
+            if(characterMoving) {
+                Vector3 direction = waypoints[currentWP].position - tf.position;
+                direction.y = 0;
+                Quaternion rotation = Quaternion.LookRotation(direction);
+                tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * turnSpeed);
+                tf.position += transform.forward * Time.deltaTime * walkSpeed;
 
-            if(!footstepAudioSource.isPlaying) {
-                footstepAudioSource.Play();
-            }
-        } else {
-            if(footstepAudioSource.isPlaying) {
-                footstepAudioSource.Stop();
+                if(!footstepAudioSource.isPlaying) {
+                    footstepAudioSource.Play();
+                }
+            } else {
+                if(footstepAudioSource.isPlaying) {
+                    footstepAudioSource.Stop();
+                }
             }
         }
+
     }
     void HandleAIBehavior() {
         switch (characterType) {

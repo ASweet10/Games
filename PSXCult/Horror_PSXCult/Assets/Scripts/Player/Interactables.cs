@@ -13,6 +13,8 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject missingNewsArticle;
     [SerializeField] GameObject UICamera;
     [SerializeField] TMP_Text interactText;
+    [SerializeField] GameObject gasStationDoor;
+    DoorController door;
 
 
     [Header ("Drinks")]
@@ -35,8 +37,10 @@ public class Interactables : MonoBehaviour
     [SerializeField] FirstPersonController firstPersonController;
     [SerializeField] MouseLook mouseLook;
     [SerializeField] AudioSource arcadeSound;
+    [SerializeField] AudioSource arcadeMusicLoop;
     [SerializeField] AudioClip arcadeMusic;
     [SerializeField] AudioClip arcadeCoinSFX;
+    [SerializeField] TMP_Text escapeToExitText;
     bool playingArcadeGame = false;
     public bool PlayingArcadeGame {
         get { return playingArcadeGame; }
@@ -44,8 +48,18 @@ public class Interactables : MonoBehaviour
     }
 
     void Start () {
+        door = gasStationDoor.GetComponent<DoorController>();
         drinkIndex = 0;
     }
+
+    public void HandleGasStationDoor() {
+        if(door.DoorClosed) {
+            door.OpenDoor();
+        } else {
+            door.CloseDoor();
+        }
+    }
+
     public void ToggleDrinksUI(bool choice) {   // Drinks in gas station
         drinkUI.SetActive(choice);
         UICamera.SetActive(choice);
@@ -111,7 +125,7 @@ public class Interactables : MonoBehaviour
     // Level 2: woods, camp grounds
     // Level 3: ?
 
-    public void ToggleArcade(bool playingGame) {
+    public IEnumerator ToggleArcade(bool playingGame) {
         if(playingGame) {
             arcadeCamera.enabled = true;
             normalCamera.enabled = false;
@@ -119,7 +133,20 @@ public class Interactables : MonoBehaviour
             firstPersonController.enabled = false;
             mouseLook.enabled = false;
             interactText.text = "";
-            StartCoroutine(StartArcadeGame());
+            arcadeSound.Play();
+            yield return new WaitForSeconds(2f);
+            arcadeMusicLoop.Stop();
+            arcadeStartScreen.SetActive(false);
+            arcadeLevelOne.SetActive(true);
+            arcadeController.ResetArcadePlayerPosition();
+
+            arcadeController.ResetStartTime(); // not working; wolf autospawns when you play again
+
+            arcadeController.CanMove = true;
+            arcadeWolfScript.ResetWolfPosition();
+            arcadeSound.clip = arcadeMusic;
+            arcadeSound.Play();
+            arcadeSound.loop = true;
         } else {
             normalCamera.enabled = true;
             arcadeCamera.enabled = false;
@@ -135,22 +162,8 @@ public class Interactables : MonoBehaviour
                 arcadeDeathUI.SetActive(false);
             }
             arcadeStartScreen.SetActive(true);
+            arcadeMusicLoop.Play();
+            escapeToExitText.enabled = false;
         }
-    }
-
-    IEnumerator StartArcadeGame() {
-        arcadeSound.Play();
-        yield return new WaitForSeconds(2f);
-        arcadeStartScreen.SetActive(false);
-        arcadeLevelOne.SetActive(true);
-        arcadeController.ResetArcadePlayerPosition();
-
-        arcadeController.ResetStartTime(); // not working; wolf autospawns when you play again
-
-        arcadeController.CanMove = true;
-        arcadeWolfScript.ResetWolfPosition();
-        arcadeSound.clip = arcadeMusic;
-        arcadeSound.Play();
-        arcadeSound.loop = true;
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class GameController : MonoBehaviour
 {
@@ -21,21 +22,22 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject missingNewsArticle;
 
     [Header("Objectives")]
-    [SerializeField] Text popupText;
-    [SerializeField] Text objectiveText;
-
-    public int currentCheckpoint = 0;
-    public bool gamePaused = false;
-    SceneFader sceneFader;
-    Interactables interactables;
+    [SerializeField] TMP_Text popupText;
+    [SerializeField] TMP_Text objectivePopupText;
+    [SerializeField] TMP_Text objectiveTextInPauseMenu;
     [SerializeField] FirstPersonController fpController;
-    [SerializeField] MouseLook mouseLook;
     [SerializeField] DialogueManager dialogueManager;
-
     [SerializeField] string[] gameObjectives;
-    [SerializeField] Transform[] restartPositions;
 
-    [Header ("Player Death")]
+    public bool holdingGasStationItem = false;
+    public bool hasPurchasedGas = false;
+    public bool hunterWarningComplete = false;
+    public bool playerCaughtStealing = false;
+    public bool playerAtPark = false;
+    public bool playerNeedsFirewood = true;
+    public bool tentCompleted = false;
+
+    [Header ("Player Death & Checkpoints")]
     [SerializeField] Camera mainCamera;
     [SerializeField] Camera deathCamera;
     [SerializeField] GameObject playerDeath3DObject;
@@ -43,42 +45,39 @@ public class GameController : MonoBehaviour
     [SerializeField] Animator playerDeathAnimator;
     [SerializeField] GameObject bloodPool;
     [SerializeField] GameObject deathUI;
+    [SerializeField] Transform[] restartPositions;
 
     [Header ("Main Menu")]
     [SerializeField] GameObject mainMenuUI;
-    [SerializeField] GameObject creditsUI;
+    [SerializeField] GameObject optionsMenuUI;
     [SerializeField] GameObject[] expositionUIObjects;
-    [SerializeField] Texture2D arrowCursor; 
 
+    public bool gamePaused = false;
+    SceneFader sceneFader;
+    Interactables interactables;
+    int currentCheckpoint = 0;
+    public int currentObjective = 0;
 
-    [Header ("Main Events")]
-    [SerializeField] AudioSource audioSource;
-    [SerializeField] AudioSource musicAudioSource;
-    [SerializeField] AudioClip collectedSFX;
+    
 
-    void Awake() {
-        sceneFader = gameObject.GetComponent<SceneFader>();
-        interactables = gameObject.GetComponent<Interactables>();
-        dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
-    }
     void Start() {
-        /*
+        currentObjective = 0;
+        currentCheckpoint = 0;
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
-            Cursor.visible = true;
+            //Cursor.lockState = CursorLockMode.None;
+            //Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
+            //Cursor.visible = true;
         }
         else {
-            Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of game window
+            //Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of game window
+            dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
         }
-        */
-
-        
+        sceneFader = gameObject.GetComponent<SceneFader>();
+        interactables = gameObject.GetComponent<Interactables>();
         //StartCoroutine(HandlePlayerDeath());
     }
 
     void Update() {
-        // consider moving all input logic to firstperson controller
         if(Input.GetKeyDown(KeyCode.Escape)) {
             int buildIndex = SceneManager.GetActiveScene().buildIndex;
             if(buildIndex == 1) {
@@ -104,7 +103,7 @@ public class GameController : MonoBehaviour
                     dialogueManager.DialogueStop();
                 }
                 else if(interactables.PlayingArcadeGame) {
-                    interactables.ToggleArcade(false);
+                    StartCoroutine(interactables.ToggleArcade(false));
                     interactables.PlayingArcadeGame = false;
                 }
                 else {
@@ -120,33 +119,24 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void ShowPopupMessage(string message, float delay) {
-        StartCoroutine(DisplayMessage(message, delay));
+    public IEnumerator HandleIntroCutscene() {
+        //First cutscene; player driving down road & title card
+        yield return null;
     }
-    IEnumerator DisplayMessage(string message, float delay) {
-        popupText.text = message;
-        popupText.enabled = true;
-        yield return new WaitForSeconds(delay);
-        popupText.enabled = false;
+    public IEnumerator HandleDriveToParkCutscene() {
+        Debug.Log("drive to park");
+        //fade to black
+        //cutscene shows player driving to park
+        //park car and see friend there
+        yield return null;
     }
-
-    public void ResumeGame() {
-        pauseMenuUI.SetActive(false);
-        cursorUI.SetActive(true);
-        popupTextUI.SetActive(true);
-        AudioListener.volume = 1f;
-        Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of window
-        Time.timeScale = 1f;
-        gamePaused = false;
-    }
-    public void PauseGame() {
-        pauseMenuUI.SetActive(true);
-        cursorUI.SetActive(false);
-        popupTextUI.SetActive(false);
-        AudioListener.volume = 0;
-        Cursor.lockState = CursorLockMode.None; //Unlock cursor
-        Time.timeScale = 0f;
-        gamePaused = true;
+    public IEnumerator HandleEscapeCutscene() {
+        //Fade to black
+        yield return new WaitForSeconds(2.5f);
+        //Fade in from black
+        //Play music
+        //Cutscene watching player drive away
+        //Credits scroll down screen
     }
 
     public IEnumerator HandlePlayerDeath() {
@@ -172,8 +162,21 @@ public class GameController : MonoBehaviour
         playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
     }
 
-    /*  IN-GAME  */
+    /*  MENUS, TEXT, etc.  */
+    public IEnumerator DisplayPopupMessage(string message) {
+        popupText.text = message;
+        popupText.enabled = true;
+        yield return new WaitForSeconds(3);
+        popupText.enabled = false;
+    }
 
+    public IEnumerator HandleNextObjective() {
+        currentObjective ++;
+        objectivePopupText.text = "Next Objective:  " + gameObjectives[currentObjective];
+        objectivePopupText.enabled = true;
+        yield return new WaitForSeconds(4);
+        objectivePopupText.enabled = false;
+    }
     public void OpenQuitGameUI() {
         quitGameOptionUI.SetActive(true);
     }
@@ -183,27 +186,35 @@ public class GameController : MonoBehaviour
     public void ConfirmQuitGame() {
         Application.Quit();
     }
-    public void EscapeAndWin() {
-        StartCoroutine(EnableEscapeCutscene());
+    public void ToggleOptionsMenu(bool toggle) {
+        mainMenuUI.SetActive(!toggle);
+        optionsMenuUI.SetActive(toggle);
     }
-    IEnumerator EnableEscapeCutscene() {
-        musicAudioSource.Stop();
-        if(!audioSource.isPlaying) {
-            audioSource.Play();
-        }
-        //Fade to black
-        yield return new WaitForSeconds(2.5f);
-        //Fade in from black
-        //Play music
-        //Cutscene watching player drive away
-        //Credits scroll down screen
-    }
-
     public void PlayGameButton() {
         StartCoroutine(sceneFader.FadeOutThenLoadScene(1));
     }
-
     public void ReturnToMenuAfterCredits() {
         StartCoroutine(sceneFader.FadeOutThenLoadScene(0));
+    }
+    public void ResumeGame() {
+        objectiveTextInPauseMenu.enabled = false;
+        pauseMenuUI.SetActive(false);
+        cursorUI.SetActive(true);
+        popupTextUI.SetActive(true);
+        AudioListener.volume = 1f;
+        Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of window
+        Time.timeScale = 1f;
+        gamePaused = false;
+    }
+    public void PauseGame() {
+        pauseMenuUI.SetActive(true);
+        cursorUI.SetActive(false);
+        popupTextUI.SetActive(false);
+        objectiveTextInPauseMenu.enabled = true;
+        objectiveTextInPauseMenu.text = gameObjectives[currentObjective];
+        AudioListener.volume = 0;
+        Cursor.lockState = CursorLockMode.None; //Unlock cursor
+        Time.timeScale = 0f;
+        gamePaused = true;
     }
 }

@@ -10,14 +10,8 @@ public class FirstPersonController : MonoBehaviour
     CharacterController controller;
     [SerializeField] Camera mainCamera;
     [SerializeField] MouseLook mouseLook;
-    [SerializeField] Interactables interactables;
-
-
-    /* Head Bob Effect */
-    [SerializeField] Animation anim;
-    bool left = true;
-    bool right = false;
-
+    [SerializeField] FlashlightToggle flashlight;
+    Interactables interactables;
 
     bool isSprinting => canSprint && Input.GetKey(sprintKey);
     bool isMoving => Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
@@ -31,13 +25,13 @@ public class FirstPersonController : MonoBehaviour
 
 
     [Header("Movement")]
-    [SerializeField, Range(3, 5)] float walkSpeed = 5f;
-    [SerializeField, Range(6, 10)] float sprintSpeed = 10f;
+    [SerializeField] float walkSpeed = 10f;
+    [SerializeField] float sprintSpeed = 20f;    
+    [SerializeField] AudioClip walkAudioClip;
+    [SerializeField] AudioClip runAudioClip;
     float gravityValue = 9.8f;
     Vector2 currentInput;
     Vector3 currentMovement;
-
-    [Header("Audio")]
     AudioSource footstepAudioSource;
 
 
@@ -48,9 +42,11 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] RawImage bloodParticles;
     [SerializeField] RawImage bloodTint;
     float currentStamina;
+    float lastStabbedTime;
     int maxHealth = 3;
     int currentHealth;
     bool canTakeDamage = true;
+    bool playerHasTakenDamage = false;
 
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;
@@ -58,9 +54,14 @@ public class FirstPersonController : MonoBehaviour
     
     [Header("Crouch")]
     [SerializeField] private float crouchHeight = 0.5f;
-    [SerializeField] private float standingHeight = 2.1f;
+    [SerializeField] private float standHeight = 2f;
+    [SerializeField] private Vector3 crouchCenter = new Vector3(0, 0.5f, 0);
+    [SerializeField] private Vector3 standCenter = new Vector3(0, 0, 0);
+    //[SerializeField] private Vector3 cameraCrouchPosition = new Vector3(0, 0.5f, 0);
+    //[SerializeField] private Vector3 cameraStandPosition = new Vector3(0, 0, 0);
     [SerializeField] private float timeToCrouch = 0.25f;
     [SerializeField, Range(1, 5)] private float crouchSpeed = 2.5f;
+    [SerializeField] GameObject cameraHolder;
     private bool isCrouching;
     private bool duringCrouchAnimation;
     private bool canCrouch = true;
@@ -74,15 +75,10 @@ public class FirstPersonController : MonoBehaviour
 
     [Header("Interact Texts")]
     [SerializeField] string trashString = "It smells awful...";
-
+    [SerializeField] string myCarString = "My car. A old piece of shit but reliable";
     GameController gameController;
     GameEvents gameEvents;
     DialogueManager dialogueManager;
-    bool playerHoldingGasStationItem = false;
-    public bool playerHoldingGasItem {
-        get { return playerHoldingGasStationItem; }
-        set { playerHoldingGasStationItem = value; }
-    }
     bool canSprint = true;
     bool canMove = true;
     public bool CanMove {
@@ -122,18 +118,28 @@ public class FirstPersonController : MonoBehaviour
 
         ApplyFinalMovement();
         if(isMoving) {
-           //HandleHeadBobEffect();
+            HandleHeadBobEffect();
+           if(!footstepAudioSource.isPlaying) {
+            if(isSprinting) {
+                footstepAudioSource.clip = runAudioClip;
+            } else {
+                footstepAudioSource.clip = walkAudioClip;
+            }
+            footstepAudioSource.Play();
+           }
+        } else {
+            footstepAudioSource.Stop();
         }
+        HandleStamina();
+        HandleFadeOutBleedEffect();
     }
     void HandleMovement() {
-        currentInput.x = Input.GetAxis("Vertical") * (isSprinting ? sprintSpeed : walkSpeed);
-        currentInput.y = Input.GetAxis("Horizontal") * (isSprinting ? sprintSpeed : walkSpeed);
+        currentInput.x = Input.GetAxis("Vertical") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed :  walkSpeed);
+        currentInput.y = Input.GetAxis("Horizontal") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed);
 
         float currentMovementY = currentMovement.y;
         currentMovement = (transform.forward * currentInput.x) + (transform.right * currentInput.y);
         currentMovement.y = currentMovementY;
-
-        //HandleStamina();
     }
 
     void ApplyFinalMovement() {
@@ -159,7 +165,7 @@ public class FirstPersonController : MonoBehaviour
                 interactText.enabled = true;
                 if(hitObj.tag != "Untagged") {
                     cursor.SetActive(false);
-                    interactText.text = "[ " + hitObj.tag + " ]";
+                    interactText.text = hitObj.tag;
                 } else {
                     interactText.text = "";
                 }
@@ -183,13 +189,10 @@ public class FirstPersonController : MonoBehaviour
             GameObject hitObj = rayHit.collider.gameObject;  // Get object that was hit
             if(Vector3.Distance(gameObject.transform.position, hitObj.transform.position) < 6f) {
                 HighlightObject(hitObj, true);
-                if(Input.GetKeyDown(KeyCode.E)) {
+                if(Input.GetKeyDown(interactKey)) {
                     switch(hitObj.GetComponent<Collider>().gameObject.tag) {
-                        case "Escape":
-                            gameController.EscapeAndWin();
-                            break;
-                        case "JournalNote":
-                            //hitObj.GetComponent<Collider>().gameObject.GetComponent<Interactable>().EnableJournalNote();
+                        case "Door":
+                            interactables.HandleGasStationDoor();
                             break;
                         case "MissingPosterOne":
                             interactables.ToggleMissingUI(1, true);
@@ -218,16 +221,33 @@ public class FirstPersonController : MonoBehaviour
                         case "Trash":
                             StartCoroutine(DisplayPopupText(trashString));
                             break;
+                        case "My Car":
+                            if(gameController.hasPurchasedGas) {
+                                if(gameController.playerAtPark) {
+                                    // Allow player to leave right away? ending 1
+                                    StartCoroutine(DisplayPopupText(trashString));
+                                } else {
+                                    gameEvents.StartDriveToParkCutscene();
+                                }
+                            }
+                            StartCoroutine(DisplayPopupText(myCarString));
+                            break;
                         case "Arcade":
-                            interactables.ToggleArcade(true);
+                            StartCoroutine(interactables.ToggleArcade(true));
                             interactables.PlayingArcadeGame = true;
                             DisablePlayerMovement(true);
                             break;
                         case "Firewood":
-                            if(gameEvents.NeedsFirewood) {
+                            if(gameController.playerNeedsFirewood) {
                                 gameEvents.HandleCollectFirewood();
                                 hitObj.SetActive(false);
                             }
+                            break;
+                        case "Head To Park":
+                            StartCoroutine(gameController.HandleDriveToParkCutscene());
+                            break;
+                        case "Escape":
+                            StartCoroutine(gameController.HandleEscapeCutscene());
                             break;
                         case "HiddenItem":
                             break;
@@ -236,6 +256,8 @@ public class FirstPersonController : MonoBehaviour
                         case "Cashier":
                             var cashierTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
                             cashierTrigger.TriggerDialogue();
+                            var cashierCharacter = hitObj.GetComponent<AICharacter>();
+                            cashierCharacter.RotateAndStartTalking();
                             Debug.Log("cashier");
                             break;
                         case "AJ":
@@ -279,23 +301,7 @@ public class FirstPersonController : MonoBehaviour
         yield return new WaitForSeconds(3f);
         popupText.text = "";
     }
-    public void DisablePlayerMovement(bool disableMovement) {
-        if (disableMovement) {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None;
-            canMove = false;
-            canInteract = false;
-            mouseLook.CanRotateMouse = false;   
-            currentMovement = Vector3.zero;
-        } else {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked;
-            canMove = true;
-            canInteract = true;
-            mouseLook.CanRotateMouse = true;
-        }
-    }
-
+    
     public void AttemptToCrouch() {
         if(!duringCrouchAnimation && controller.isGrounded) {
             if(Input.GetKeyDown(KeyCode.C)) {
@@ -307,23 +313,23 @@ public class FirstPersonController : MonoBehaviour
         duringCrouchAnimation = true;
 
         float timeElapsed = 0f;
-        float currentHeight = controller.height;
-        float targetHeight;
-        if(isCrouching) {
-            targetHeight = standingHeight;
-            isCrouching = false;
-        }
-        else {
-            targetHeight = crouchHeight;
-            isCrouching = true;
-        }
 
-        while(timeElapsed > timeToCrouch) {
+        // Change height
+        float targetHeight = isCrouching ? standHeight : crouchHeight;
+        float currentHeight = controller.height;
+        // Change center so you don't fall through floor
+        Vector3 targetCenter = isCrouching ? standCenter : crouchCenter;
+        Vector3 currentCenter = controller.center;
+
+        while(timeElapsed < timeToCrouch) {
             controller.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed / timeToCrouch);
+            controller.center = Vector3.Lerp(currentCenter, targetCenter, timeElapsed / timeToCrouch);
             timeElapsed += Time.deltaTime;
             yield return null;
         }
         controller.height = targetHeight;
+        controller.center = targetCenter;
+        isCrouching = !isCrouching;
         duringCrouchAnimation = false;
     }
 
@@ -334,19 +340,21 @@ public class FirstPersonController : MonoBehaviour
     }
     IEnumerator TakeDamageAndWait() {
         canTakeDamage = false;
+        playerHasTakenDamage = true;
+        lastStabbedTime = Time.time;
         currentHealth --;
         Debug.Log("health: " + currentHealth);
         switch(currentHealth) {
             case 2:
                 bleedingUI.SetActive(true);
-                float alpha2 = 125f;
+                float alpha2 = 0.2f;
                 Color particleColor = bloodParticles.color;
                 particleColor.a = alpha2;
                 bloodParticles.color = particleColor;
                 break;
             case 1:
                 bleedingUI.SetActive(true);
-                float alpha1 = 250f;
+                float alpha1 = 1f;
                 particleColor = bloodParticles.color;
                 particleColor.a = alpha1;
                 bloodParticles.color = particleColor;
@@ -354,45 +362,78 @@ public class FirstPersonController : MonoBehaviour
                 break;
             case int currentHealth when currentHealth <= 0:
                 bleedingUI.SetActive(false);
-                gameController.HandlePlayerDeath();
+                StartCoroutine(gameController.HandlePlayerDeath());
                 break;
         }
-
         yield return new WaitForSeconds(2);
+        playerHasTakenDamage = false;
         canTakeDamage = true;
+    }
+
+    void HandleFadeOutBleedEffect() {
+        if(bleedingUI.activeInHierarchy && Time.time - lastStabbedTime > 3f) {
+            while (bloodParticles.color.a > 0) {
+                bloodParticles.color = new Color(bloodParticles.color.r, bloodParticles.color.g, bloodParticles.color.b, bloodParticles.color.a - (Time.deltaTime / 6));
+                if(playerHasTakenDamage) {
+                    break;
+                }
+            }
+            if(!playerHasTakenDamage) {
+                bleedingUI.SetActive(false);
+            }
+        }
     }
 
     void HandleStamina() {
         if(currentStamina <= 0) {
+            currentStamina = 0;
             windedAudioSource.Play();
             canSprint = false;
         }
         else {
-            if(isSprinting) {
-                currentStamina --;
+            if(canSprint) {
+                if(isSprinting) {
+                    currentStamina -= 1f * Time.deltaTime;
+                } else {
+                    if(currentStamina < maxStamina) {
+                        currentStamina += 0.75f * Time.deltaTime;
+                    } else {
+                        currentStamina = maxStamina;
+                        canSprint = true;
+                    }
+                }
             } else {
-                currentStamina += 0.75f * Time.deltaTime;
+                if(currentStamina < maxStamina) {
+                    currentStamina += 0.75f * Time.deltaTime;
+                } else {
+                    currentStamina = maxStamina;
+                    canSprint = true;
+                }
             }
         }
         Debug.Log(currentStamina);
     }
+
     void HandleHeadBobEffect() {
-        if(controller.isGrounded) {
-            if(left == true) {
-                if(!anim.isPlaying) {
-                    anim.Play("WalkLeft");
-                    left = false;
-                    right = true;
-                }
-            }
-            if(right == true) {
-                if(!anim.isPlaying)
-                {
-                    anim.Play("WalkRight");
-                    right = false;
-                    left = true;
-                }
-            }
+
+    }
+
+    public void DisablePlayerMovement(bool disableMovement) {
+        if (disableMovement) {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+            canMove = false;
+            canInteract = false;
+            mouseLook.CanRotateMouse = false;   
+            currentMovement = Vector3.zero;
+            flashlight.ToggleFlashlightStatus(false);
+        } else {
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+            canMove = true;
+            canInteract = true;
+            mouseLook.CanRotateMouse = true;
+            flashlight.ToggleFlashlightStatus(true);
         }
     }
 }

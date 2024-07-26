@@ -7,7 +7,9 @@ using TMPro;
 
 public class DialogueManager : MonoBehaviour
 {
+    [SerializeField] GameController gameController;
     [SerializeField] GameObject dialogueParent;
+    [SerializeField] GameObject playerCarRef;
     [SerializeField] TMP_Text speakerText;
     [SerializeField] TMP_Text dialogueText;
     [SerializeField] Button option1Button;
@@ -29,13 +31,9 @@ public class DialogueManager : MonoBehaviour
     int currentDialogueIndex = 0;
     bool optionSelected = false;
 
-    bool hasPurchasedGas = false;
-    bool hunterWarningComplete = false;
-    bool holdingGasItem = false;
-    bool playerCaughtStealing = false;
-
     void Start() {
         dialogueParent.SetActive(false); // Hide dialogue by default
+        gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
     }
     public void DialogueStart(List<dialogueString> textToPrint, string speakerName) {
         dialogueParent.SetActive(true);
@@ -51,9 +49,9 @@ public class DialogueManager : MonoBehaviour
         
         switch(speakerName) {
             case "Cashier":
-                if(hasPurchasedGas) {
-                    if(holdingGasItem) {
-                        if(playerCaughtStealing) {
+                if(gameController.hasPurchasedGas) {
+                    if(gameController.holdingGasStationItem) {
+                        if(gameController.playerCaughtStealing) {
                             currentDialogueIndex = 9; // Steal options
                         } else {
                             currentDialogueIndex = 11; // Buy item options
@@ -70,7 +68,7 @@ public class DialogueManager : MonoBehaviour
             case "David":
                 break;
             case "Hunter":
-                if(hunterWarningComplete) {
+                if(gameController.hunterWarningComplete) {
                     currentDialogueIndex = 11; // Random hunter options
                     Debug.Log(11);
                 } else {
@@ -187,9 +185,10 @@ public class DialogueManager : MonoBehaviour
     }
 
     public void PurchaseGas() {
-        hasPurchasedGas = true;
+        gameController.hasPurchasedGas = true;
+        playerCarRef.tag = "Head To Park";
     }
     public void FinishHunterWarning() {
-        hunterWarningComplete = true;
+        gameController.hunterWarningComplete = true;
     }
 }
