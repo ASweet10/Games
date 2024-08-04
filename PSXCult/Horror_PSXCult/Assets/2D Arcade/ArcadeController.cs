@@ -8,12 +8,14 @@ public class ArcadeController : MonoBehaviour
     [SerializeField] GameObject arcadeWolf;
     [SerializeField] GameObject deathUI;
     [SerializeField] GameObject arcadeLevelOne;
+    [SerializeField] GameObject arcadeBloodScreen;
     [SerializeField] SpriteRenderer spriteRenderer;
     [SerializeField] Rigidbody2D playerRB;
     [SerializeField] Animator anim;
+    [SerializeField] AudioSource wolfSnarlAudio;
     [SerializeField] Transform arcadePlayerTF;
     [SerializeField] Transform playerStartPosition;
-    Vector2 movement;
+    [SerializeField] Light arcadeLight;
     float moveSpeed = 1.5f;
     int playerHealth;
     int maxHealth = 3;
@@ -27,6 +29,7 @@ public class ArcadeController : MonoBehaviour
     float startTime;
 
     void Start() {
+        wolfSnarlAudio = gameObject.GetComponent<AudioSource>();
         playerHealth = maxHealth;
         canMove = true;
         facingRight = true;
@@ -34,7 +37,7 @@ public class ArcadeController : MonoBehaviour
         wolfSpawned = false;
     }
     void Update() {
-        if(Time.time - startTime > 8f) {
+        if(Time.time - startTime > 6f) {
             if(!wolfSpawned) {
                 arcadeWolf.SetActive(true);
                 wolfSpawned = true;
@@ -80,10 +83,18 @@ public class ArcadeController : MonoBehaviour
         }
     }
 
-    public void HandleArcadeGameOver() {
+    public IEnumerator HandleArcadeGameOver() {
         canMove = false;
+        anim.SetBool("isWalking", false);
+        wolfSnarlAudio.Play();
+        arcadeBloodScreen.SetActive(true);
+        arcadeLight.enabled = false;
+        yield return new WaitForSeconds(2f);
+        arcadeBloodScreen.SetActive(false);
+        arcadeLight.enabled = true;
         deathUI.SetActive(true);
         arcadeLevelOne.SetActive(false);
+
     }
 
     public void ResetArcadePlayerPosition() {

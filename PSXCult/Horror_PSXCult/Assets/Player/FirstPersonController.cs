@@ -8,6 +8,7 @@ using UnityEngine.UI;
 public class FirstPersonController : MonoBehaviour
 {
     CharacterController controller;
+    Transform tf;
     [SerializeField] Camera mainCamera;
     [SerializeField] MouseLook mouseLook;
     [SerializeField] FlashlightToggle flashlight;
@@ -15,9 +16,20 @@ public class FirstPersonController : MonoBehaviour
 
     bool isSprinting => canSprint && Input.GetKey(sprintKey);
     bool isMoving => Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
-    bool shouldJump => controller.isGrounded && Input.GetKey(jumpKey);
-
-
+    bool shouldJump => controller.isGrounded && Input.GetKeyDown(jumpKey);
+    bool shouldCrouch => !duringCrouchAnimation && controller.isGrounded && Input.GetKeyDown(KeyCode.C);
+    bool IsSliding { 
+        get {
+            if(controller.isGrounded && Physics.Raycast(tf.position, Vector3.down, out RaycastHit slopeHit, 2f)) {
+                hitPointNormal = slopeHit.normal;
+                return Vector3.Angle(hitPointNormal, Vector3.up) > controller.slopeLimit;
+            } else {
+                return false;
+            }
+        }
+    }
+    
+    
     [Header("Controls")]
     KeyCode interactKey = KeyCode.E;
     KeyCode sprintKey = KeyCode.LeftShift;
@@ -27,12 +39,20 @@ public class FirstPersonController : MonoBehaviour
     [Header("Movement")]
     [SerializeField] float walkSpeed = 10f;
     [SerializeField] float sprintSpeed = 20f;    
-    [SerializeField] AudioClip walkAudioClip;
-    [SerializeField] AudioClip runAudioClip;
     float gravityValue = 9.8f;
     Vector2 currentInput;
     Vector3 currentMovement;
+
+
+    [Header("Footsteps")]
     AudioSource footstepAudioSource;
+    [SerializeField] AudioClip walkAudioForest;
+    [SerializeField] AudioClip walkAudioConcrete;
+    float baseStepSpeed = 0.5f;
+    float crouchStepMultiplier = 1.5f;
+    float sprintStepMultiplier = 0.6f;
+    float footstepTimer = 0;
+    float GetCurrentOffset => isCrouching ? baseStepSpeed * crouchStepMultiplier : isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
 
 
     [Header("Health & Stamina")]
@@ -43,29 +63,43 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] RawImage bloodTint;
     float currentStamina;
     float lastStabbedTime;
-    int maxHealth = 3;
-    int currentHealth;
+    float maxHealth = 15;
+    float currentHealth;
     bool canTakeDamage = true;
     bool playerHasTakenDamage = false;
+    bool canSprint = true;
+
 
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;
+    bool canJump = true;
 
-    
+    // Sliding
+    Vector3 hitPointNormal; // Angle of floor
+    float slopeSpeed = 8f;
+
     [Header("Crouch")]
-    [SerializeField] private float crouchHeight = 0.5f;
-    [SerializeField] private float standHeight = 2f;
-    [SerializeField] private Vector3 crouchCenter = new Vector3(0, 0.5f, 0);
-    [SerializeField] private Vector3 standCenter = new Vector3(0, 0, 0);
-    //[SerializeField] private Vector3 cameraCrouchPosition = new Vector3(0, 0.5f, 0);
-    //[SerializeField] private Vector3 cameraStandPosition = new Vector3(0, 0, 0);
-    [SerializeField] private float timeToCrouch = 0.25f;
-    [SerializeField, Range(1, 5)] private float crouchSpeed = 2.5f;
-    [SerializeField] GameObject cameraHolder;
-    private bool isCrouching;
-    private bool duringCrouchAnimation;
-    private bool canCrouch = true;
-    
+    [SerializeField] float crouchHeight = 0.5f;
+    [SerializeField] float standHeight = 2f;
+    [SerializeField] Vector3 crouchCenter = new Vector3(0, 0.5f, 0);
+    [SerializeField] Vector3 standCenter = new Vector3(0, 0, 0);
+    [SerializeField] float timeToCrouch = 0.25f;
+    [SerializeField, Range(1, 5)] float crouchSpeed = 2.5f;
+    bool isCrouching;
+    bool duringCrouchAnimation;
+    bool canCrouch = true;
+
+
+    [Header("Headbob")]
+    [SerializeField] float walkBobSpeed = 14f;
+    [SerializeField] float walkBobAmount = 0.05f;
+    [SerializeField] float crouchBobSpeed = 8f;
+    [SerializeField] float crouchBobAmount = 0.025f;
+    [SerializeField] float sprintBobSpeed = 18f;
+    [SerializeField] float sprintBobAmount = 0.1f;
+    float defaultYPosition = 0;
+    float timer;
+
 
     [Header("Highlights")]
     GameObject lastHighlightedObject;
@@ -73,23 +107,16 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] TMP_Text interactText; // Text displayed on hover
     [SerializeField] TMP_Text popupText; // Popup text after interaction
 
+
     [Header("Interact Texts")]
     [SerializeField] string trashString = "It smells awful...";
     [SerializeField] string myCarString = "My car. A old piece of shit but reliable";
     GameController gameController;
     GameEvents gameEvents;
     DialogueManager dialogueManager;
-    bool canSprint = true;
-    bool canMove = true;
-    public bool CanMove {
-        get { return canMove; }
-        set { canMove = value; }
-    }
-    bool canInteract = true;
-    public bool CanInteract {
-        get { return canInteract; }
-        set { canInteract = value;}
-    } 
+
+    public bool CanMove { get; private set; } = true;
+    public bool CanInteract { get; private set; } 
     
     void Awake() {
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
@@ -98,6 +125,8 @@ public class FirstPersonController : MonoBehaviour
         dialogueManager = gameObject.GetComponent<DialogueManager>();
         interactables = GameObject.FindGameObjectWithTag("GameController").GetComponent<Interactables>();
         gameEvents = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameEvents>(); 
+        defaultYPosition = mainCamera.transform.localPosition.y; // Return camera to default position when not moving
+        tf = gameObject.GetComponent<Transform>();
     }
 
     void Start() {
@@ -106,39 +135,31 @@ public class FirstPersonController : MonoBehaviour
         currentHealth = maxHealth;
     }
     void Update() {
-        if(canMove) {
-            HandleMovement();
-        }
-        if(canCrouch) {
-            AttemptToCrouch();
-        }
-        if(canInteract) {
-            HandleInteraction();
-        }
-
-        ApplyFinalMovement();
-        if(isMoving) {
-            HandleHeadBobEffect();
-           if(!footstepAudioSource.isPlaying) {
-            if(isSprinting) {
-                footstepAudioSource.clip = runAudioClip;
-            } else {
-                footstepAudioSource.clip = walkAudioClip;
+        if(CanMove) {
+            HandleMovementInput();
+            if(canCrouch) {
+                AttemptToCrouch();
             }
-            footstepAudioSource.Play();
-           }
-        } else {
-            footstepAudioSource.Stop();
+            if(CanInteract) {
+                HandleInteraction();
+            }
+            /*
+            if(canJump) {
+                HandleJump();
+            }
+            */
+            HandleHeadbobEffect();
+            HandleStamina();
+            HandleMovementSFX();
+            ApplyFinalMovement();
         }
-        HandleStamina();
-        HandleFadeOutBleedEffect();
     }
-    void HandleMovement() {
+    void HandleMovementInput() {
         currentInput.x = Input.GetAxis("Vertical") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed :  walkSpeed);
         currentInput.y = Input.GetAxis("Horizontal") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed);
 
         float currentMovementY = currentMovement.y;
-        currentMovement = (transform.forward * currentInput.x) + (transform.right * currentInput.y);
+        currentMovement = (tf.forward * currentInput.x) + (transform.right * currentInput.y);
         currentMovement.y = currentMovementY;
     }
 
@@ -148,6 +169,10 @@ public class FirstPersonController : MonoBehaviour
             if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
                 currentMovement.y = 0;
             }
+        }
+
+        if(IsSliding) {
+            currentMovement += new Vector3(hitPointNormal.x, -hitPointNormal.y, hitPointNormal.z) * slopeSpeed;
         }
         controller.Move(currentMovement * Time.deltaTime);
     }
@@ -243,6 +268,21 @@ public class FirstPersonController : MonoBehaviour
                                 hitObj.SetActive(false);
                             }
                             break;
+                        case "Zippo":
+                            if(gameController.playerNeedsZippo) {
+                                gameEvents.HandleCollectZippo();
+                                hitObj.SetActive(false);
+                            }
+                            break;
+                        case "Lighter Fluid":
+                            if(gameController.playerNeedsLighterFluid) {
+                                gameEvents.HandleCollectLighterFluid();
+                                hitObj.SetActive(false);
+                            }
+                            break;
+                        case "Start Fire":
+                            StartCoroutine(gameEvents.StartCampFire());
+                            break;
                         case "Head To Park":
                             StartCoroutine(gameController.HandleDriveToParkCutscene());
                             break;
@@ -252,6 +292,8 @@ public class FirstPersonController : MonoBehaviour
                         case "HiddenItem":
                             break;
                         case "CarKeys":
+                            gameEvents.HandleCollectCarKeys();
+                            hitObj.SetActive(false);
                             break;
                         case "Cashier":
                             var cashierTrigger = hitObj.GetComponentInChildren<DialogueTrigger>();
@@ -303,15 +345,16 @@ public class FirstPersonController : MonoBehaviour
     }
     
     public void AttemptToCrouch() {
-        if(!duringCrouchAnimation && controller.isGrounded) {
-            if(Input.GetKeyDown(KeyCode.C)) {
-                StartCoroutine(CrouchOrStand());
-            }
+        if(shouldCrouch) {
+            StartCoroutine(CrouchOrStand());
         }
     }
     private IEnumerator CrouchOrStand() {
+        // If you try to stand up and hit anything 1 unit above, cancel and remain crouched
+        if (isCrouching && Physics.Raycast(mainCamera.transform.position, Vector3.up, 1f)) {
+            yield break;
+        }
         duringCrouchAnimation = true;
-
         float timeElapsed = 0f;
 
         // Change height
@@ -333,6 +376,12 @@ public class FirstPersonController : MonoBehaviour
         duringCrouchAnimation = false;
     }
 
+    void HandleJump() {
+        if(shouldJump) {
+            currentMovement.y = jumpForce;
+        }
+    }
+
     public void TakeDamage() {
         if(canTakeDamage) {
             StartCoroutine(TakeDamageAndWait());
@@ -345,7 +394,7 @@ public class FirstPersonController : MonoBehaviour
         currentHealth --;
         Debug.Log("health: " + currentHealth);
         switch(currentHealth) {
-            case 2:
+            case float currentHealth when currentHealth < 15f && currentHealth > 10:
                 bleedingUI.SetActive(true);
                 float alpha2 = 0.2f;
                 Color particleColor = bloodParticles.color;
@@ -360,17 +409,19 @@ public class FirstPersonController : MonoBehaviour
                 bloodParticles.color = particleColor;
                 // heavy breathing audio? 
                 break;
-            case int currentHealth when currentHealth <= 0:
+            case float currentHealth when currentHealth <= 0:
                 bleedingUI.SetActive(false);
+                StopCoroutine(HandleRegenerateHealth());
                 StartCoroutine(gameController.HandlePlayerDeath());
                 break;
         }
         yield return new WaitForSeconds(2);
+        StartCoroutine(HandleRegenerateHealth());
         playerHasTakenDamage = false;
         canTakeDamage = true;
     }
 
-    void HandleFadeOutBleedEffect() {
+    void HandleBleedEffect() {
         if(bleedingUI.activeInHierarchy && Time.time - lastStabbedTime > 3f) {
             while (bloodParticles.color.a > 0) {
                 bloodParticles.color = new Color(bloodParticles.color.r, bloodParticles.color.g, bloodParticles.color.b, bloodParticles.color.a - (Time.deltaTime / 6));
@@ -383,55 +434,110 @@ public class FirstPersonController : MonoBehaviour
             }
         }
     }
-
+    IEnumerator HandleRegenerateHealth() {
+        while(currentHealth < maxHealth) {
+            if(playerHasTakenDamage) {
+                break;
+            }
+            currentHealth += 1 * Time.deltaTime;
+            if(currentHealth >= maxHealth) {
+                currentHealth = maxHealth;
+            }
+            yield return new WaitForSeconds(0.5f);
+            Debug.Log(currentHealth);
+        }
+    }
     void HandleStamina() {
-        if(currentStamina <= 0) {
+        if(currentStamina < 0) {
             currentStamina = 0;
             windedAudioSource.Play();
             canSprint = false;
         }
-        else {
-            if(canSprint) {
-                if(isSprinting) {
-                    currentStamina -= 1f * Time.deltaTime;
-                } else {
-                    if(currentStamina < maxStamina) {
-                        currentStamina += 0.75f * Time.deltaTime;
-                    } else {
-                        currentStamina = maxStamina;
-                        canSprint = true;
-                    }
-                }
-            } else {
-                if(currentStamina < maxStamina) {
-                    currentStamina += 0.75f * Time.deltaTime;
+
+        if(isSprinting) {
+            currentStamina -= 1f * Time.deltaTime; // Sprinting
+        } else {
+            if(canSprint == false) {
+                if(currentStamina < maxStamina) { // Not sprinting, regenerate stamina
+                    currentStamina += 1f * Time.deltaTime;
                 } else {
                     currentStamina = maxStamina;
                     canSprint = true;
                 }
             }
         }
-        Debug.Log(currentStamina);
     }
 
-    void HandleHeadBobEffect() {
+    void HandleMovementSFX() {
+        if(!controller.isGrounded || !isMoving) {
+            footstepAudioSource.Stop();
+            return;
+        }
 
+        if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 4)) {
+            switch(hit.collider.tag) {
+                case "Tile":
+                    Debug.Log("tile");
+                    if(footstepAudioSource.clip != walkAudioConcrete) {
+                        footstepAudioSource.Stop();
+                        footstepAudioSource.clip = walkAudioConcrete;
+                        if(!footstepAudioSource.isPlaying) {
+                            footstepAudioSource.Play();
+                        }
+                    } else {
+                        if(!footstepAudioSource.isPlaying) {
+                            footstepAudioSource.Play();
+                        }
+                    }
+                    break;
+                default:
+                    Debug.Log("ground");
+                    if(footstepAudioSource.clip != walkAudioForest) {
+                        footstepAudioSource.Stop();
+                        footstepAudioSource.clip = walkAudioForest;
+                        if(!footstepAudioSource.isPlaying) {
+                            footstepAudioSource.Play();
+                        }
+                    } else {
+                        if(!footstepAudioSource.isPlaying) {
+                            footstepAudioSource.Play();
+                        }
+                    }
+                    break;
+            }
+        }
+    }
+    void HandleHeadbobEffect() {
+        if(!controller.isGrounded) {
+            return;
+        }
+
+        if(Mathf.Abs(currentMovement.x) > 0.1f || Mathf.Abs(currentMovement.z) > 0.1f) {
+            timer += Time.deltaTime * (isCrouching ? crouchBobSpeed : isSprinting ? sprintBobSpeed : walkBobSpeed);
+             // return Sin of angle; between -1 and 1
+             //  Multiply this value by amount depending on current movement
+            mainCamera.transform.localPosition = new Vector3(
+                mainCamera.transform.localPosition.x,
+                defaultYPosition + Mathf.Sin(timer) * (isCrouching ? crouchBobAmount : isSprinting ? sprintBobAmount : walkBobAmount),
+                mainCamera.transform.localPosition.z
+            );
+        }
     }
 
     public void DisablePlayerMovement(bool disableMovement) {
         if (disableMovement) {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None;
-            canMove = false;
-            canInteract = false;
+            CanMove = false;
+            CanInteract = false;
             mouseLook.CanRotateMouse = false;   
             currentMovement = Vector3.zero;
             flashlight.ToggleFlashlightStatus(false);
         } else {
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked;
-            canMove = true;
-            canInteract = true;
+            CanMove = true;
+            CanInteract = true;
             mouseLook.CanRotateMouse = true;
             flashlight.ToggleFlashlightStatus(true);
         }

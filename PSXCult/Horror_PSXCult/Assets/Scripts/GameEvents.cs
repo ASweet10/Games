@@ -12,6 +12,7 @@ public class GameEvents : MonoBehaviour
     [SerializeField] GameObject fireSmall;
     [SerializeField] GameObject fireMediumSmoke;
     [SerializeField] GameObject fireBigSmoke;
+    [SerializeField] GameObject campfireObject;
     [SerializeField] Transform campfirePosition;
     [SerializeField] float smallFireTime = 5f;
     [SerializeField] float mediumFireTime = 10f;
@@ -36,6 +37,10 @@ public class GameEvents : MonoBehaviour
         //TransitionToNighttime();
     }
     public IEnumerator StartCampFire() {
+        campfireObject.tag = "";
+        // Animation of lighter fluid pouring onto fire
+        // Animation of zippo starting fire? 
+        //   or match thrown onto fire? (change from zippo -> match?)
         var smallFire = Instantiate(fireSmall, campfirePosition.position, Quaternion.identity);
         yield return new WaitForSecondsRealtime(smallFireTime);
         Destroy(smallFire);
@@ -43,6 +48,8 @@ public class GameEvents : MonoBehaviour
         yield return new WaitForSecondsRealtime(mediumFireTime);
         Destroy(mediumFire);
         Instantiate(fireBigSmoke, campfirePosition.position, Quaternion.identity);
+        gameController.fireStarted = true;
+        gameController.HandleNextObjective();
     }
     public void HandleCollectFirewood() {
         firewoodNeeded --;
@@ -65,6 +72,28 @@ public class GameEvents : MonoBehaviour
             }
             SpawnHunterAtCamp();
         }
+    }
+
+    public void HandleCollectZippo() {
+        gameController.playerNeedsZippo = false;
+        if(!gameController.playerNeedsLighterFluid) {
+            StartCoroutine(gameController.HandleNextObjective());
+            campfireObject.tag = "Start Fire";
+        }
+    }
+    public void HandleCollectLighterFluid() {
+        gameController.playerNeedsLighterFluid = false;
+        if(!gameController.playerNeedsZippo) {
+            StartCoroutine(gameController.HandleNextObjective());
+            campfireObject.tag = "Start Fire";
+        }
+    }
+    public void HandleCollectCarKeys() {
+        gameController.playerNeedsCarKeys = false;
+        StartCoroutine(gameController.HandleNextObjective());
+        // enable car keys in pause menu
+        // change player car tag
+        // spawn additional bad guys?
     }
     public void SpawnHunterAtCamp() {
         hunter.SetActive(true);

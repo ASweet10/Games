@@ -10,7 +10,7 @@ public class ArcadeWolf : MonoBehaviour
     [SerializeField] Transform wolfStartPosition;
     [SerializeField] Animator anim;
     [SerializeField] Transform arcadePlayer;
-    float moveSpeed = 1.6f;
+    float moveSpeed = 1.1f;
     float distance;
     void Start() {
         ResetWolfPosition();
@@ -31,7 +31,7 @@ public class ArcadeWolf : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, arcadePlayer.position, moveSpeed * Time.deltaTime);
             anim.SetBool("isWalking", true);
         } else {
-            arcadeController.HandleArcadeGameOver();
+            StartCoroutine(arcadeController.HandleArcadeGameOver());
             anim.SetBool("isWalking", false);
         }
     }

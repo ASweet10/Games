@@ -36,6 +36,10 @@ public class GameController : MonoBehaviour
     public bool playerAtPark = false;
     public bool playerNeedsFirewood = true;
     public bool tentCompleted = false;
+    public bool playerNeedsZippo = true;
+    public bool playerNeedsLighterFluid = true;
+    public bool playerNeedsCarKeys = true;
+    public bool fireStarted = false;
 
     [Header ("Player Death & Checkpoints")]
     [SerializeField] Camera mainCamera;
@@ -46,6 +50,8 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject bloodPool;
     [SerializeField] GameObject deathUI;
     [SerializeField] Transform[] restartPositions;
+    [SerializeField] GameObject[] killers;
+
 
     [Header ("Main Menu")]
     [SerializeField] GameObject mainMenuUI;
@@ -56,13 +62,14 @@ public class GameController : MonoBehaviour
     SceneFader sceneFader;
     Interactables interactables;
     int currentCheckpoint = 0;
-    public int currentObjective = 0;
+    public int currentObjective = 4;
 
     
 
     void Start() {
-        currentObjective = 0;
-        currentCheckpoint = 0;
+        //currentObjective = 0;
+        //currentCheckpoint = 0;
+
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
             //Cursor.lockState = CursorLockMode.None;
             //Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
@@ -146,6 +153,11 @@ public class GameController : MonoBehaviour
         mainCamera.enabled = false;
         deathUI.SetActive(true);
         playerDeath3DObject.SetActive(true);
+
+        foreach(GameObject killer in killers) {
+            AIKiller aiRef = killer.GetComponent<AIKiller>();
+            aiRef.state = AIKiller.State.idle;
+        }
 
         int deathClipIndex = Random.Range(0, playerDeathClips.Length - 1);
         deathClipIndex = 3;

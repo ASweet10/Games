@@ -4,7 +4,6 @@ using UnityEngine;
 
 public class FlashlightToggle : MonoBehaviour
 {
-    
     [SerializeField] KeyCode flashlightKey = KeyCode.F;
     [SerializeField] GameObject flashlight;
     [SerializeField] AudioSource flashlightAudioSource;
@@ -28,7 +27,7 @@ public class FlashlightToggle : MonoBehaviour
     }
     public void ToggleFlashlightStatus(bool newStatus) {
         canUseFlashlight = newStatus;
-        if(flashlight.activeInHierarchy) {
+        if(flashlight != null && flashlight.activeInHierarchy) {
             flashlight.SetActive(false);
         }
     }
