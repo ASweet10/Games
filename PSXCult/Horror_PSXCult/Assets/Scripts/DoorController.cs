@@ -13,10 +13,7 @@ public class DoorController : MonoBehaviour
     [SerializeField] AudioClip gasStationBellClip;
     
     bool doorClosed = true;
-    public bool DoorClosed {
-        get { return doorClosed; }
-        set { doorClosed = value; }
-    }
+    public bool DoorClosed { get; private set; } = true;
     bool canInteractWithDoor = true;
 
     public void OpenDoor() {

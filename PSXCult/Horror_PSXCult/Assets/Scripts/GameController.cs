@@ -11,7 +11,6 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject pauseMenuUI;
     [SerializeField] GameObject cursorUI;
     [SerializeField] GameObject quitGameOptionUI;
-    [SerializeField] GameObject popupTextUI;
     [SerializeField] GameObject dialogueUI;
 
     [SerializeField] GameObject drinksUI;
@@ -19,7 +18,9 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject missingTwoUI;
     [SerializeField] GameObject missingThreeUI;
     [SerializeField] GameObject missingFourUI;
-    [SerializeField] GameObject missingNewsArticle;
+    [SerializeField] GameObject missingFiveUI;
+    [SerializeField] GameObject gasStationNewspaper;
+    [SerializeField] GameObject stateParkNewspaper;
 
     [Header("Objectives")]
     [SerializeField] TMP_Text popupText;
@@ -103,9 +104,15 @@ public class GameController : MonoBehaviour
                 else if(missingFourUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(4, false);
                 }
-                else if(missingNewsArticle.activeInHierarchy) {
+                else if(missingFiveUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(5, false);
-                } 
+                }
+                else if(gasStationNewspaper.activeInHierarchy) {
+                    interactables.ToggleMissingUI(6, false);
+                }
+                else if(stateParkNewspaper.activeInHierarchy) {
+                    interactables.ToggleMissingUI(7, false);
+                }  
                 else if(dialogueUI.activeInHierarchy) {
                     dialogueManager.DialogueStop();
                 }
@@ -174,17 +181,16 @@ public class GameController : MonoBehaviour
         playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
     }
 
-    /*  MENUS, TEXT, etc.  */
+    /*  MENUS, TEXT, etc. */
     public IEnumerator DisplayPopupMessage(string message) {
         popupText.text = message;
-        popupText.enabled = true;
-        yield return new WaitForSeconds(3);
-        popupText.enabled = false;
-    }
+        yield return new WaitForSeconds(3f);
+        popupText.text = "";
+    }   
 
     public IEnumerator HandleNextObjective() {
         currentObjective ++;
-        objectivePopupText.text = "Next Objective:  " + gameObjectives[currentObjective];
+        //objectivePopupText.text = "Next Objective:  " + gameObjectives[currentObjective];
         objectivePopupText.enabled = true;
         yield return new WaitForSeconds(4);
         objectivePopupText.enabled = false;
@@ -212,21 +218,21 @@ public class GameController : MonoBehaviour
         objectiveTextInPauseMenu.enabled = false;
         pauseMenuUI.SetActive(false);
         cursorUI.SetActive(true);
-        popupTextUI.SetActive(true);
+        popupText.enabled = true;
         AudioListener.volume = 1f;
-        Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of window
-        Time.timeScale = 1f;
+        fpController.DisablePlayerMovement(false);
+        //Time.timeScale = 1f;
         gamePaused = false;
     }
     public void PauseGame() {
         pauseMenuUI.SetActive(true);
         cursorUI.SetActive(false);
-        popupTextUI.SetActive(false);
+        popupText.enabled = false;
         objectiveTextInPauseMenu.enabled = true;
         objectiveTextInPauseMenu.text = gameObjectives[currentObjective];
         AudioListener.volume = 0;
-        Cursor.lockState = CursorLockMode.None; //Unlock cursor
-        Time.timeScale = 0f;
+        fpController.DisablePlayerMovement(true);
+        //Time.timeScale = 0f;
         gamePaused = true;
     }
 }

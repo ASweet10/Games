@@ -10,7 +10,9 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject missingTwoUI;
     [SerializeField] GameObject missingThreeUI;
     [SerializeField] GameObject missingFourUI;
-    [SerializeField] GameObject missingNewsArticle;
+    [SerializeField] GameObject missingFiveUI;
+    [SerializeField] GameObject gasStationNewspaperUI;
+    [SerializeField] GameObject stateParkNewspaperUI;
     [SerializeField] GameObject UICamera;
     [SerializeField] TMP_Text interactText;
     [SerializeField] GameObject gasStationDoor;
@@ -93,8 +95,14 @@ public class Interactables : MonoBehaviour
                 missingFourUI.SetActive(choice);
                 break;
             case 5:
-                missingNewsArticle.SetActive(choice);
+                missingFiveUI.SetActive(choice);
                 break;
+            case 6:
+                gasStationNewspaperUI.SetActive(choice);
+                break;
+            case 7:
+                stateParkNewspaperUI.SetActive(choice);
+            break;
         }
     }
 

@@ -31,7 +31,7 @@ public class ArcadeWolf : MonoBehaviour
             transform.position = Vector3.MoveTowards(transform.position, arcadePlayer.position, moveSpeed * Time.deltaTime);
             anim.SetBool("isWalking", true);
         } else {
-            StartCoroutine(arcadeController.HandleArcadeGameOver());
+            arcadeController.HandleLoseArcadeLife();
             anim.SetBool("isWalking", false);
         }
     }
