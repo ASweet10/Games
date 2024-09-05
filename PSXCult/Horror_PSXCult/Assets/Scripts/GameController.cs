@@ -13,6 +13,11 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject quitGameOptionUI;
     [SerializeField] GameObject dialogueUI;
 
+
+
+
+
+    //MOVE TO INTERACTABLES, SAME WITH ESCAPE BUTTON LOGIC
     [SerializeField] GameObject drinksUI;
     [SerializeField] GameObject missingOneUI;
     [SerializeField] GameObject missingTwoUI;
@@ -21,6 +26,13 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject missingFiveUI;
     [SerializeField] GameObject gasStationNewspaper;
     [SerializeField] GameObject stateParkNewspaper;
+    [SerializeField] GameObject carNoteUI;
+
+
+
+
+
+
 
     [Header("Objectives")]
     [SerializeField] TMP_Text popupText;
@@ -35,6 +47,7 @@ public class GameController : MonoBehaviour
     public bool hunterWarningComplete = false;
     public bool playerCaughtStealing = false;
     public bool playerAtPark = false;
+    public bool playerHasReadCarNote = false;
     public bool playerNeedsFirewood = true;
     public bool tentCompleted = false;
     public bool playerNeedsZippo = true;
@@ -88,35 +101,31 @@ public class GameController : MonoBehaviour
     void Update() {
         if(Input.GetKeyDown(KeyCode.Escape)) {
             int buildIndex = SceneManager.GetActiveScene().buildIndex;
+            //Check to see if any of these are active, not all of them
+            // Maybe loop through array
+            // If any are active, set all inactive
             if(buildIndex == 1) {
                 if(drinksUI.activeInHierarchy) {
                     interactables.ToggleDrinksUI(false);
-                }
-                else if(missingOneUI.activeInHierarchy) {
+                } else if(missingOneUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(1, false);
-                } 
-                else if(missingTwoUI.activeInHierarchy) {
+                } else if(missingTwoUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(2, false);
-                }
-                else if(missingThreeUI.activeInHierarchy) {
+                } else if(missingThreeUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(3, false);
-                }
-                else if(missingFourUI.activeInHierarchy) {
+                } else if(missingFourUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(4, false);
-                }
-                else if(missingFiveUI.activeInHierarchy) {
+                } else if(missingFiveUI.activeInHierarchy) {
                     interactables.ToggleMissingUI(5, false);
-                }
-                else if(gasStationNewspaper.activeInHierarchy) {
+                } else if(gasStationNewspaper.activeInHierarchy) {
                     interactables.ToggleMissingUI(6, false);
-                }
-                else if(stateParkNewspaper.activeInHierarchy) {
+                } else if(stateParkNewspaper.activeInHierarchy) {
                     interactables.ToggleMissingUI(7, false);
-                }  
-                else if(dialogueUI.activeInHierarchy) {
+                } else if(carNoteUI.activeInHierarchy) {
+                    interactables.ToggleMissingUI(8, false);
+                } else if(dialogueUI.activeInHierarchy) {
                     dialogueManager.DialogueStop();
-                }
-                else if(interactables.PlayingArcadeGame) {
+                } else if(interactables.PlayingArcadeGame) {
                     StartCoroutine(interactables.ToggleArcade(false));
                     interactables.PlayingArcadeGame = false;
                 }

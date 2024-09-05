@@ -12,6 +12,13 @@ public class ArcadeWolf : MonoBehaviour
     [SerializeField] Transform arcadePlayer;
     float moveSpeed = 1.1f;
     float distance;
+    bool canMove;
+    public bool CanMove {
+        get { return canMove; }
+        set { canMove = value; }
+    }
+
+
     void Start() {
         ResetWolfPosition();
     }
@@ -21,7 +28,10 @@ public class ArcadeWolf : MonoBehaviour
         } else {
             spriteRenderer.flipX = false;
         }
-        HandleAIBehavior();
+        if(canMove) {
+            HandleAIBehavior();
+        }
+
     }
     void HandleAIBehavior() {
         distance = Vector2.Distance(transform.position, arcadePlayer.position);

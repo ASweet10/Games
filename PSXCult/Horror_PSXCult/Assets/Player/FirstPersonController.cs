@@ -11,6 +11,7 @@ public class FirstPersonController : MonoBehaviour
     Transform tf;
     [SerializeField] Camera mainCamera;
     [SerializeField] MouseLook mouseLook;
+    TerrainTexDetector terrainTexDetector;
     [SerializeField] FlashlightToggle flashlight;
     Interactables interactables;
 
@@ -46,13 +47,16 @@ public class FirstPersonController : MonoBehaviour
 
     [Header("Footsteps")]
     AudioSource footstepAudioSource;
-    [SerializeField] AudioClip walkAudioForest;
-    [SerializeField] AudioClip walkAudioConcrete;
+    [SerializeField] AudioClip[] grassClips;
+    [SerializeField] AudioClip[] concreteClips;
+    [SerializeField] AudioClip[] dirtClips;
     float baseStepSpeed = 0.5f;
     float crouchStepMultiplier = 1.5f;
     float sprintStepMultiplier = 0.6f;
     float footstepTimer = 0;
     float GetCurrentOffset => isCrouching ? baseStepSpeed * crouchStepMultiplier : isSprinting ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
+    public int terrainDataIndex;
+
 
 
     [Header("Health & Stamina")]
@@ -117,6 +121,7 @@ public class FirstPersonController : MonoBehaviour
     [Header("Interact Texts")]
     [SerializeField] string trashString = "It smells awful...";
     [SerializeField] string myCarString = "My car. An old piece of shit but it's reliable";
+    [SerializeField] string davidCarString = "David's new wheels. I'm sure he'll brag about it";
     [SerializeField] string needsZippoAndLighterFluidString = "I'm gonna need lighter fluid and a lighter";
     [SerializeField] string needsZippoString = "I still need a source of fire...";
     [SerializeField] string needsLighterFluidString = "I still need lighter fluid...";    
@@ -131,6 +136,7 @@ public class FirstPersonController : MonoBehaviour
     void Awake() {
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
         controller = gameObject.GetComponent<CharacterController>();
+        terrainTexDetector = gameObject.GetComponent<TerrainTexDetector>();
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         interactables = GameObject.FindGameObjectWithTag("GameController").GetComponent<Interactables>();
         gameEvents = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameEvents>(); 
@@ -145,6 +151,8 @@ public class FirstPersonController : MonoBehaviour
     }
     void Update() {
         if(CanMove) {
+            terrainDataIndex = terrainTexDetector.GetActiveTerrainTextureIdx(tf.position);
+            Debug.Log("Index: " + terrainDataIndex);
             HandleMovementInput();
             if(canCrouch) { AttemptToCrouch(); }
             if(CanInteract) { HandleInteraction(); }
@@ -317,38 +325,31 @@ public class FirstPersonController : MonoBehaviour
             return;
         }
 
-        if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 4)) {
-            switch(hit.collider.tag) {
-                case "Tile":
+        footstepTimer -= Time.deltaTime; // Play one footstep per second? what is this
+
+        if(footstepTimer <= 0) {
+            if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 4)) {
+                if(hit.collider.tag == "Tile") {
                     Debug.Log("tile");
-                    if(footstepAudioSource.clip != walkAudioConcrete) {
-                        footstepAudioSource.Stop();
-                        footstepAudioSource.clip = walkAudioConcrete;
-                        if(!footstepAudioSource.isPlaying) {
-                            footstepAudioSource.Play();
-                        }
-                    } else {
-                        if(!footstepAudioSource.isPlaying) {
-                            footstepAudioSource.Play();
-                        }
+                    footstepAudioSource.PlayOneShot(concreteClips[Random.Range(0, concreteClips.Length - 1)]);
+                } else {
+                    switch(terrainDataIndex) {
+                        case 0:
+                            footstepAudioSource.PlayOneShot(concreteClips[Random.Range(0, concreteClips.Length - 1)]);
+                            break;
+                        case 1:
+                            footstepAudioSource.PlayOneShot(dirtClips[Random.Range(0, dirtClips.Length - 1)]);
+                            break;
+                        case 5:
+                            footstepAudioSource.PlayOneShot(grassClips[Random.Range(0, grassClips.Length - 1)]);
+                            break;
                     }
-                    break;
-                default:
-                    Debug.Log("ground");
-                    if(footstepAudioSource.clip != walkAudioForest) {
-                        footstepAudioSource.Stop();
-                        footstepAudioSource.clip = walkAudioForest;
-                        if(!footstepAudioSource.isPlaying) {
-                            footstepAudioSource.Play();
-                        }
-                    } else {
-                        if(!footstepAudioSource.isPlaying) {
-                            footstepAudioSource.Play();
-                        }
-                    }
-                    break;
+                }
             }
+
+            footstepTimer = GetCurrentOffset;
         }
+
     }
     void HandleHeadbobEffect() {
         if(!controller.isGrounded) {
@@ -455,6 +456,12 @@ public class FirstPersonController : MonoBehaviour
                             interactables.ToggleMissingUI(7, true);
                             DisablePlayerMovement(true);
                             break;
+                        case "Car Note":
+                            interactables.ToggleMissingUI(8, true);
+                            gameController.playerHasReadCarNote = true;
+                            gameController.HandleNextObjective();
+                            DisablePlayerMovement(true);
+                            break;
                         case "Drinks":
                             interactables.ToggleDrinksUI(true);
                             DisablePlayerMovement(true);
@@ -471,6 +478,9 @@ public class FirstPersonController : MonoBehaviour
                                 }
                             }
                             StartCoroutine(gameController.DisplayPopupMessage(myCarString));
+                            break;
+                        case "David's Car":
+                            StartCoroutine(gameController.DisplayPopupMessage(davidCarString));
                             break;
                         case "Arcade":
                             StartCoroutine(interactables.ToggleArcade(true));

@@ -5,10 +5,12 @@ using UnityEngine;
 
 public class ArcadeController : MonoBehaviour
 {
-    [SerializeField] GameObject arcadeWolf;
+    [SerializeField] GameObject arcadeWolfObject;
+    ArcadeWolf arcadeWolfController;
     [SerializeField] GameObject deathUI;
     [SerializeField] GameObject arcadeLevelOne;
     [SerializeField] GameObject arcadeBloodScreen;
+    [SerializeField] GameObject arcadeScreenCamera;
     [SerializeField] SpriteRenderer spriteRenderer;
     [SerializeField] Rigidbody2D playerRB;
     [SerializeField] Animator anim;
@@ -17,8 +19,8 @@ public class ArcadeController : MonoBehaviour
     [SerializeField] Transform playerStartPosition;
     [SerializeField] Light arcadeLight;
     float moveSpeed = 1.5f;
-    int playerHealth;
-    int maxHealth = 3;
+    int playerLives;
+    int maxLives = 3;
     bool canMove;
     public bool CanMove {
         get { return canMove; }
@@ -27,10 +29,13 @@ public class ArcadeController : MonoBehaviour
     bool wolfSpawned;
     bool facingRight;
     float startTime;
+    int currentRoomNumber = 1;
 
     void Start() {
         wolfSnarlAudio = gameObject.GetComponent<AudioSource>();
-        playerHealth = maxHealth;
+        arcadeWolfController = arcadeWolfObject.GetComponent<ArcadeWolf>();
+
+        playerLives = maxLives;
         canMove = true;
         facingRight = true;
         startTime = Time.time;
@@ -39,7 +44,7 @@ public class ArcadeController : MonoBehaviour
     void Update() {
         if(Time.time - startTime > 6f) {
             if(!wolfSpawned) {
-                arcadeWolf.SetActive(true);
+                arcadeWolfObject.SetActive(true);
                 wolfSpawned = true;
             }
         }
@@ -73,11 +78,10 @@ public class ArcadeController : MonoBehaviour
         }
     }
     // or no take damage, if caught by monster you are dead. restart level / lose life
-    void TakeDamage() {
-        playerHealth --;
-        if(playerHealth <= 0) {
-            canMove = false;
-            deathUI.SetActive(true);
+    public void HandleLoseArcadeLife() {
+        playerLives --;
+        if(playerLives <= 0) {
+            StartCoroutine(HandleArcadeGameOver());
         } else {
             // screen gets bloodier? some feedback
         }
@@ -102,5 +106,13 @@ public class ArcadeController : MonoBehaviour
     }
     public void ResetStartTime() {
         startTime = Time.time;
+    }
+
+    public IEnumerator DisableMovementAndTransitionScreen() {
+        canMove = false;
+        arcadeWolfController.CanMove = false;
+        yield return new WaitForSeconds(2f);
+        canMove = true;
+        arcadeWolfController.CanMove = true;
     }
 }

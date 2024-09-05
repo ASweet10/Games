@@ -13,6 +13,7 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject missingFiveUI;
     [SerializeField] GameObject gasStationNewspaperUI;
     [SerializeField] GameObject stateParkNewspaperUI;
+    [SerializeField] GameObject carNoteUI;
     [SerializeField] GameObject UICamera;
     [SerializeField] TMP_Text interactText;
     [SerializeField] GameObject gasStationDoor;
@@ -43,11 +44,7 @@ public class Interactables : MonoBehaviour
     [SerializeField] AudioClip arcadeMusic;
     [SerializeField] AudioClip arcadeCoinSFX;
     [SerializeField] TMP_Text escapeToExitText;
-    bool playingArcadeGame = false;
-    public bool PlayingArcadeGame {
-        get { return playingArcadeGame; }
-        set { playingArcadeGame = value; }
-    }
+    public bool PlayingArcadeGame = false;
 
     void Start () {
         door = gasStationDoor.GetComponent<DoorController>();
@@ -102,7 +99,10 @@ public class Interactables : MonoBehaviour
                 break;
             case 7:
                 stateParkNewspaperUI.SetActive(choice);
-            break;
+                break;
+            case 8:
+                carNoteUI.SetActive(choice);
+                break;
         }
     }
 
