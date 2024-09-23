@@ -23,10 +23,16 @@ public class DialogueManager : MonoBehaviour
 
     List<dialogueString> dialogueList;
     [SerializeField] AudioSource typingAudio;
+    [SerializeField] AudioClip[] typingClips;
 
     [Header("Player")]
     [SerializeField] FirstPersonController firstPersonController;
     [SerializeField] MouseLook mouseLook;
+
+    [Header("Zoom")]
+    [SerializeField] Camera mainCamera;
+    [SerializeField] float zoomTime = 0.3f;
+    float defaultFOV;
 
     int currentDialogueIndex = 0;
     bool optionSelected = false;
@@ -38,15 +44,17 @@ public class DialogueManager : MonoBehaviour
     public void DialogueStart(List<dialogueString> textToPrint, string speakerName) {
         dialogueParent.SetActive(true);
         speakerText.text = speakerName;
-
+        dialogueList = textToPrint;
+        /*
         firstPersonController.enabled = false;
         mouseLook.CanRotateMouse = false;
 
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+        */
+        firstPersonController.DisablePlayerMovement(true);
+        StartCoroutine(HandleZoomIn(true));
 
-        dialogueList = textToPrint;
-        
         switch(speakerName) {
             case "Cashier":
                 if(gameController.hasPurchasedGas) {
@@ -129,6 +137,7 @@ public class DialogueManager : MonoBehaviour
             dialogueText.text += letter;
             yield return new WaitForSeconds(typingSpeed);
             if(!typingAudio.isPlaying) {
+                typingAudio.clip = typingClips[Random.Range(0, typingClips.Length - 1)];
                 typingAudio.Play();
             }
         }
@@ -182,6 +191,22 @@ public class DialogueManager : MonoBehaviour
         mouseLook.CanRotateMouse = true;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
+        StartCoroutine(HandleZoomIn(false));
+        firstPersonController.DisablePlayerMovement(false);
+    }
+    IEnumerator HandleZoomIn(bool shouldZoomIn) {
+        float targetFOV = shouldZoomIn ? 50 : 60;
+        float startFOV = mainCamera.fieldOfView;
+        float timeElapsed = 0;
+
+        while(timeElapsed < zoomTime) {
+            mainCamera.fieldOfView = Mathf.Lerp(startFOV, targetFOV, timeElapsed / zoomTime);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        mainCamera.fieldOfView = targetFOV;
+        yield return null;
     }
 
     public void PurchaseGas() {

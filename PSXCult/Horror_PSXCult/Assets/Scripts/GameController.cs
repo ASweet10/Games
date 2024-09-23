@@ -11,35 +11,13 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject pauseMenuUI;
     [SerializeField] GameObject cursorUI;
     [SerializeField] GameObject quitGameOptionUI;
-    [SerializeField] GameObject dialogueUI;
-
-
-
-
-
-    //MOVE TO INTERACTABLES, SAME WITH ESCAPE BUTTON LOGIC
-    [SerializeField] GameObject drinksUI;
-    [SerializeField] GameObject missingOneUI;
-    [SerializeField] GameObject missingTwoUI;
-    [SerializeField] GameObject missingThreeUI;
-    [SerializeField] GameObject missingFourUI;
-    [SerializeField] GameObject missingFiveUI;
-    [SerializeField] GameObject gasStationNewspaper;
-    [SerializeField] GameObject stateParkNewspaper;
-    [SerializeField] GameObject carNoteUI;
-
-
-
-
-
-
+    [SerializeField] Interactables interactables;
 
     [Header("Objectives")]
     [SerializeField] TMP_Text popupText;
     [SerializeField] TMP_Text objectivePopupText;
     [SerializeField] TMP_Text objectiveTextInPauseMenu;
     [SerializeField] FirstPersonController fpController;
-    [SerializeField] DialogueManager dialogueManager;
     [SerializeField] string[] gameObjectives;
 
     public bool holdingGasStationItem = false;
@@ -74,16 +52,12 @@ public class GameController : MonoBehaviour
 
     public bool gamePaused = false;
     SceneFader sceneFader;
-    Interactables interactables;
     int currentCheckpoint = 0;
     public int currentObjective = 4;
-
-    
 
     void Start() {
         //currentObjective = 0;
         //currentCheckpoint = 0;
-
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
             //Cursor.lockState = CursorLockMode.None;
             //Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
@@ -91,55 +65,10 @@ public class GameController : MonoBehaviour
         }
         else {
             //Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of game window
-            dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
+            interactables.enabled = true;
         }
         sceneFader = gameObject.GetComponent<SceneFader>();
-        interactables = gameObject.GetComponent<Interactables>();
         //StartCoroutine(HandlePlayerDeath());
-    }
-
-    void Update() {
-        if(Input.GetKeyDown(KeyCode.Escape)) {
-            int buildIndex = SceneManager.GetActiveScene().buildIndex;
-            //Check to see if any of these are active, not all of them
-            // Maybe loop through array
-            // If any are active, set all inactive
-            if(buildIndex == 1) {
-                if(drinksUI.activeInHierarchy) {
-                    interactables.ToggleDrinksUI(false);
-                } else if(missingOneUI.activeInHierarchy) {
-                    interactables.ToggleMissingUI(1, false);
-                } else if(missingTwoUI.activeInHierarchy) {
-                    interactables.ToggleMissingUI(2, false);
-                } else if(missingThreeUI.activeInHierarchy) {
-                    interactables.ToggleMissingUI(3, false);
-                } else if(missingFourUI.activeInHierarchy) {
-                    interactables.ToggleMissingUI(4, false);
-                } else if(missingFiveUI.activeInHierarchy) {
-                    interactables.ToggleMissingUI(5, false);
-                } else if(gasStationNewspaper.activeInHierarchy) {
-                    interactables.ToggleMissingUI(6, false);
-                } else if(stateParkNewspaper.activeInHierarchy) {
-                    interactables.ToggleMissingUI(7, false);
-                } else if(carNoteUI.activeInHierarchy) {
-                    interactables.ToggleMissingUI(8, false);
-                } else if(dialogueUI.activeInHierarchy) {
-                    dialogueManager.DialogueStop();
-                } else if(interactables.PlayingArcadeGame) {
-                    StartCoroutine(interactables.ToggleArcade(false));
-                    interactables.PlayingArcadeGame = false;
-                }
-                else {
-                    if(gamePaused) {
-                        ResumeGame();
-                    }
-                    else {
-                        PauseGame();
-                    }
-                }
-                fpController.DisablePlayerMovement(false);
-            }
-        }
     }
 
     public IEnumerator HandleIntroCutscene() {

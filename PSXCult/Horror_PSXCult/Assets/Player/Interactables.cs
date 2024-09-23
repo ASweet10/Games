@@ -6,6 +6,12 @@ using UnityEngine;
 
 public class Interactables : MonoBehaviour 
 {
+    [SerializeField] GameController gameController;
+    [SerializeField] GameObject dialogueUI;
+    DialogueManager dialogueManager;
+    FirstPersonController fpController;
+
+    [Header ("UI Objects")]
     [SerializeField] GameObject missingOneUI;
     [SerializeField] GameObject missingTwoUI;
     [SerializeField] GameObject missingThreeUI;
@@ -44,11 +50,54 @@ public class Interactables : MonoBehaviour
     [SerializeField] AudioClip arcadeMusic;
     [SerializeField] AudioClip arcadeCoinSFX;
     [SerializeField] TMP_Text escapeToExitText;
-    public bool PlayingArcadeGame = false;
+    public bool playingArcadeGame = false;
+
 
     void Start () {
+        gameController = gameObject.GetComponent<GameController>();
+        dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
+        fpController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
         door = gasStationDoor.GetComponent<DoorController>();
         drinkIndex = 0;
+    }
+    
+    void Update() {
+        if(Input.GetKeyDown(KeyCode.Escape)) {
+            // Maybe loop through array; If any are active, set all inactive
+            if(drinkUI.activeInHierarchy) {
+                ToggleDrinksUI(false);
+            } else if(missingOneUI.activeInHierarchy) {
+                ToggleMissingUI(1, false);
+            } else if(missingTwoUI.activeInHierarchy) {
+                ToggleMissingUI(2, false);
+            } else if(missingThreeUI.activeInHierarchy) {
+                ToggleMissingUI(3, false);
+            } else if(missingFourUI.activeInHierarchy) {
+                ToggleMissingUI(4, false);
+            } else if(missingFiveUI.activeInHierarchy) {
+                ToggleMissingUI(5, false);
+            } else if(gasStationNewspaperUI.activeInHierarchy) {
+                ToggleMissingUI(6, false);
+            } else if(stateParkNewspaperUI.activeInHierarchy) {
+                ToggleMissingUI(7, false);
+            } else if(carNoteUI.activeInHierarchy) {
+                ToggleMissingUI(8, false);
+            } else if(dialogueUI.activeInHierarchy) {
+                dialogueManager.DialogueStop();
+            } else if(playingArcadeGame) {
+                StartCoroutine(ToggleArcade(false));
+                playingArcadeGame = false;
+            }
+            else {
+                if(gameController.gamePaused) {
+                    gameController.ResumeGame();
+                }
+                else {
+                    gameController.PauseGame();
+                }
+            }
+            fpController.DisablePlayerMovement(false);
+        }
     }
 
     public void HandleGasStationDoor() {
@@ -129,10 +178,6 @@ public class Interactables : MonoBehaviour
         drinkDescription.text = drinkDescriptions[drinkIndex];
     }
     
-    // Level 1: car park, woods, lake
-    // Level 2: woods, camp grounds
-    // Level 3: ?
-
     public IEnumerator ToggleArcade(bool playingGame) {
         if(playingGame) {
             arcadeCamera.enabled = true;

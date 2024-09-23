@@ -128,7 +128,7 @@ public class AIKiller : MonoBehaviour
         anim.SetTrigger("Stab");
         yield return new WaitForSeconds(1f);
         if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
-            fpController.TakeDamage();
+            fpController.TakeDamage("Stab");
         }
         canAttack = true;
     }
