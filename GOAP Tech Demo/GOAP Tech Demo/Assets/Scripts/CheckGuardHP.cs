@@ -7,14 +7,13 @@ public class CheckGuardHP : Node
 {
     Transform transform;
     GuardManager guardManager;
-    public CheckGuardHP(Transform tf){
+    public CheckGuardHP(Transform tf) {
         transform = tf;
         guardManager = tf.GetComponent<GuardManager>();
     }
 
 
-    public override NodeState Evaluate()
-    {
+    public override NodeState Evaluate() {
         //Guard is healthy enough, node fails
         if(guardManager.ReturnCurrentHP() >= GuardBT.fleeHealthValue){
             state = NodeState.FAILURE;

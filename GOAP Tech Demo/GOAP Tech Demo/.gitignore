@@ -91,7 +91,17 @@ ExportedObj/
 *.inputactions
 *.playable
 *.ai
-
+*.dae
+*.hdr
+*.flare
+*.swatches
+*.webp
+*.stl
+*.glb
+*.cubemap
+*.rtf
+*.playable
+*.cubemap
 
 # Unity3D generated meta files
 *.pidb.meta

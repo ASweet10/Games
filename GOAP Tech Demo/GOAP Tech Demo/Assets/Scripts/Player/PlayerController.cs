@@ -27,6 +27,9 @@ public class PlayerController : MonoBehaviour
     [SerializeField, Range(1, 20)] float maxStamina = 15f;
     [SerializeField] AudioSource windedAudioSource;
     float currentStamina;
+
+    [SerializeField] int maxHealth = 10;
+    int currentHealth;
     
     /*
     [Header("Crouch Parameters")]
@@ -39,51 +42,37 @@ public class PlayerController : MonoBehaviour
     private bool canCrouch = true;
     */
 
-    void Awake()
-    {
+    void Awake() {
         //footstepAudioSource = gameObject.GetComponent<AudioSource>();
     }
-    void Start()
-    {
+    void Start() {
         currentStamina = maxStamina;
+        currentHealth = maxHealth;
     }
-    void Update()
-    {
-        if(canMove)
-        {
-            if(canRun)
-            {
-                if(Input.GetKey(KeyCode.LeftShift))
-                {
+    void Update() {
+        if(canMove) {
+            if(canRun) {
+                if(Input.GetKey(KeyCode.LeftShift)) {
                     currentSpeed = sprintSpeed;
                 }
-                else
-                {
+                else {
                     currentSpeed = walkSpeed;
                 }
-            }
-            else
-            {
+            } else {
                 currentSpeed = walkSpeed;
             }
 
             moveSide = Input.GetAxis("Horizontal") * currentSpeed;
             moveForward = Input.GetAxis("Vertical") * currentSpeed;
 
-            if(moveSide != 0 || moveForward != 0)
-            {
+            if(moveSide != 0 || moveForward != 0) {
                 MovePlayer();
-            }
-            else
-            {
+            } else {
                 //PauseFootstepAudio();
             }
-        }
-        else
-        {
+        } else {
            //PauseFootstepAudio();
         }
-
     }   
 
     void MovePlayer()
@@ -152,6 +141,18 @@ public class PlayerController : MonoBehaviour
     public void ToggleMovement(bool choice)
     {
         canMove = choice;
+    }
+
+    public bool TakeSwordHit() {
+        currentHealth --;
+        Debug.Log(currentHealth);
+        if(currentHealth > 0){
+            //change UI, lose heart, etc.
+            return false;
+        } else {
+            //kill player
+            return true;
+        }
     }
 
     //Not used in this game

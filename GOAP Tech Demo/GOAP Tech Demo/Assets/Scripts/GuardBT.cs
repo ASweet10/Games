@@ -21,11 +21,11 @@ public class GuardBT : Tree
         switch(guardType){
             case GuardType.Aggressive:
                 Node root = new Selector(new List<Node>{
-                new Sequence(new List<Node>{
+                new Sequence(new List<Node>{ // Last checked; If player in attack range, attack
                     new CheckEnemyInAttackRange(transform),
                     new TaskAttack(transform)
                 }),
-                new Sequence(new List<Node>{
+                new Sequence(new List<Node>{ // Next checked; If player seen in FOV cone, go to them
                     new CheckEnemyInFOVCones(transform),
                     new TaskGoToTarget(transform)
                 }),

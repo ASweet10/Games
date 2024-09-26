@@ -6,26 +6,25 @@ using BehaviorTree;
 public class TaskAttack : Node
 {
     Transform lastTarget;
-    PlayerManager playerManager;
+    PlayerController playerController;
     Animator anim;
     float attackTime = 1f;
     float attackCounter = 0f;
 
-    public TaskAttack(Transform tf){
+    public TaskAttack(Transform tf) {
         //anim = tf.GetComponent<Animator>();
     }
 
-    public override NodeState Evaluate()
-    {
+    public override NodeState Evaluate() {
         Transform target = (Transform)GetData("target");
-        if(target != lastTarget){
-            playerManager = target.GetComponent<PlayerManager>();
+        if(target != lastTarget) {
+            playerController = target.GetComponent<PlayerController>();
             lastTarget = target;
         }
 
         attackCounter += Time.deltaTime;
-        if(attackCounter >= attackTime){
-            bool playerDead = playerManager.TakeSwordHit();
+        if(attackCounter >= attackTime) {
+            bool playerDead = playerController.TakeSwordHit();
 
             //Guard recognizes player is dead
             // Could do a celebration / idle / animation before going back to patrolling
