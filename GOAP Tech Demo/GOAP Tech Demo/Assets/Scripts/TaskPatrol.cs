@@ -22,9 +22,8 @@ public class TaskPatrol : Node
     }
 
 
-    public override NodeState Evaluate()
-    {
-        if(waiting){
+    public override NodeState Evaluate() {
+        if(waiting) {
             waitCounter += Time.deltaTime;
             if(waitCounter >= waitTime){
                 waiting = false;
@@ -33,13 +32,13 @@ public class TaskPatrol : Node
         }
         else{
             Transform wp = waypoints[currentWP];
-            if(Vector3.Distance(transform.position, wp.position) < 0.01f){
+            if(Vector3.Distance(transform.position, wp.position) < 0.01f) {
                 transform.position = wp.position;
                 waitCounter = 0f;
                 waiting = true;
                 anim.SetBool("Walking", false);
 
-            if(currentWP == waypoints.Length - 1){
+            if(currentWP == waypoints.Length - 1) {
                 currentWP = 0;
             } else {
                 currentWP++;
@@ -48,8 +47,8 @@ public class TaskPatrol : Node
         else{
             /*
             if(!controller.isGrounded){
-            verticalSpeed -= gravityValue * Time.deltaTime;
-            currentMovement.y = verticalSpeed;
+                verticalSpeed -= gravityValue * Time.deltaTime;
+                currentMovement.y = verticalSpeed;
             }
             */
             transform.position = Vector3.MoveTowards(transform.position, waypoints[currentWP].position, GuardBT.speed * Time.deltaTime);

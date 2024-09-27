@@ -12,7 +12,7 @@ public class TaskAttack : Node
     float attackCounter = 0f;
 
     public TaskAttack(Transform tf) {
-        //anim = tf.GetComponent<Animator>();
+        anim = tf.GetComponent<Animator>();
     }
 
     public override NodeState Evaluate() {
@@ -26,12 +26,11 @@ public class TaskAttack : Node
         if(attackCounter >= attackTime) {
             bool playerDead = playerController.TakeSwordHit();
 
-            //Guard recognizes player is dead
-            // Could do a celebration / idle / animation before going back to patrolling
             if(playerDead){
                 ClearData("target");
-                //anim.SetBool("Attacking", false);
-                //anim.SetBool("Walking", true);
+                //Guard recognizes player is dead; celebration / idle / animation before going back to patrolling?
+                anim.SetBool("Attacking", false);
+                anim.SetBool("Walking", true);
             } else {
                 attackCounter = 0f;
             }

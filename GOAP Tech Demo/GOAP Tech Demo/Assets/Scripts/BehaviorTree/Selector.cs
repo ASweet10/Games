@@ -11,10 +11,9 @@ namespace BehaviorTree{
         public Selector(List<Node> children) : base(children) { }
 
 
-        public override NodeState Evaluate()
-        {
-            foreach(Node node in children){
-                switch(node.Evaluate()){
+        public override NodeState Evaluate() {
+            foreach(Node node in children) {
+                switch(node.Evaluate()) {
                     case NodeState.FAILURE:
                         continue;
                     case NodeState.SUCCESS:
@@ -33,4 +32,3 @@ namespace BehaviorTree{
         }
     }
 }
-

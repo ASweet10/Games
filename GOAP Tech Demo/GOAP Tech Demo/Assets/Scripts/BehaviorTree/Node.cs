@@ -4,8 +4,7 @@ using UnityEngine;
 
 namespace BehaviorTree{
     public enum NodeState { RUNNING, SUCCESS, FAILURE }
-    public class Node 
-    {
+    public class Node {
         protected NodeState state;
         public Node parent;
 
@@ -67,4 +66,3 @@ namespace BehaviorTree{
         }
     }
 }
-

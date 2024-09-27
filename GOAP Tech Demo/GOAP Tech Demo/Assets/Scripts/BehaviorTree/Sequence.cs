@@ -11,12 +11,11 @@ namespace BehaviorTree{
         public Sequence(List<Node> children) : base(children) { }
 
 
-        public override NodeState Evaluate()
-        {
+        public override NodeState Evaluate() {
             bool anyChildRunning = false;
 
-            foreach(Node node in children){
-                switch(node.Evaluate()){
+            foreach(Node node in children) {
+                switch(node.Evaluate()) {
                     case NodeState.FAILURE:
                         state = NodeState.FAILURE;
                         return state;
@@ -36,4 +35,3 @@ namespace BehaviorTree{
         }
     }
 }
-

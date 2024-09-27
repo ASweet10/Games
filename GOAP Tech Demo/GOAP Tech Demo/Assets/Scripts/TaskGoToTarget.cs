@@ -14,13 +14,14 @@ public class TaskGoToTarget : Node
     }
 
 
-    public override NodeState Evaluate()
-    {
+    public override NodeState Evaluate() {
         Transform target = (Transform)GetData("target");
 
-        if (Vector3.Distance(transform.position, target.position) > 0.01f){
+        if (Vector3.Distance(transform.position, target.position) > 2f){
             transform.position = Vector3.MoveTowards(transform.position, target.position, GuardBT.speed * Time.deltaTime);
             transform.LookAt(target);
+            anim.SetBool("Walking", true);
+            anim.SetBool("Idle", false);
         }
         
         state = NodeState.RUNNING;

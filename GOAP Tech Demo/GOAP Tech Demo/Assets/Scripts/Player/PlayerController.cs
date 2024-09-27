@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
+    Manager manager;
     AudioSource footstepAudioSource;
     [SerializeField] AudioClip concreteWalkSFX;
     [SerializeField] AudioClip concreteSprintSFX;
@@ -44,6 +45,7 @@ public class PlayerController : MonoBehaviour
 
     void Awake() {
         //footstepAudioSource = gameObject.GetComponent<AudioSource>();
+        manager = GameObject.FindGameObjectWithTag("GameController").GetComponent<Manager>();
     }
     void Start() {
         currentStamina = maxStamina;
@@ -151,6 +153,8 @@ public class PlayerController : MonoBehaviour
             return false;
         } else {
             //kill player
+            ToggleMovement(false);
+            manager.HandleGameOver();
             return true;
         }
     }
