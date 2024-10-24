@@ -10,6 +10,7 @@ public class ArcadeController : MonoBehaviour
     [SerializeField] GameObject deathUI;
     [SerializeField] GameObject arcadeLevelOne;
     [SerializeField] GameObject arcadeBloodScreen;
+    [SerializeField] GameObject arcadeBackground;
     [SerializeField] GameObject arcadeScreenCamera;
     [SerializeField] SpriteRenderer spriteRenderer;
     [SerializeField] Rigidbody2D playerRB;
@@ -77,7 +78,7 @@ public class ArcadeController : MonoBehaviour
             }
         }
     }
-    // or no take damage, if caught by monster you are dead. restart level / lose life
+
     public void HandleLoseArcadeLife() {
         playerLives --;
         if(playerLives <= 0) {
@@ -90,15 +91,17 @@ public class ArcadeController : MonoBehaviour
     public IEnumerator HandleArcadeGameOver() {
         canMove = false;
         anim.SetBool("isWalking", false);
+        arcadeLevelOne.SetActive(false);
         wolfSnarlAudio.Play();
+        arcadeBackground.SetActive(false);
         arcadeBloodScreen.SetActive(true);
         arcadeLight.enabled = false;
+        
         yield return new WaitForSeconds(2f);
         arcadeBloodScreen.SetActive(false);
+        arcadeBackground.SetActive(true);
         arcadeLight.enabled = true;
         deathUI.SetActive(true);
-        arcadeLevelOne.SetActive(false);
-
     }
 
     public void ResetArcadePlayerPosition() {

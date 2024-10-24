@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Rendering.PostProcessing;
 
 public class FirstPersonController : MonoBehaviour
 {
@@ -11,7 +12,7 @@ public class FirstPersonController : MonoBehaviour
     Transform tf;
     [SerializeField] Camera mainCamera;
     [SerializeField] MouseLook mouseLook;
-    TerrainTexDetector terrainTexDetector;
+
     [SerializeField] FlashlightToggle flashlight;
     FirstPersonHighlights fpHighlights;
 
@@ -46,6 +47,7 @@ public class FirstPersonController : MonoBehaviour
 
 
     [Header("Footsteps")]
+    TerrainTexDetector terrainTexDetector;
     AudioSource footstepAudioSource;
     [SerializeField] AudioClip[] grassClips;
     [SerializeField] AudioClip[] concreteClips;
@@ -64,10 +66,11 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] AudioSource windedAudioSource;
     [SerializeField] GameObject bleedingUI;
     [SerializeField] RawImage bloodParticles;
-    [SerializeField] RawImage bloodTint;
+    [SerializeField] PostProcessVolume volume;
+    Vignette vignette = null;
     float currentStamina;
     float lastStabbedTime;
-    float maxHealth = 15;
+    float maxHealth = 10;
     float currentHealth;
     bool canTakeDamage = true;
     bool playerHasTakenDamage = false;
@@ -107,7 +110,7 @@ public class FirstPersonController : MonoBehaviour
 
     GameController gameController;
 
-    public bool CanMove { get; private set; } = true;
+    public bool canMove = true;
 
     
     void Awake() {
@@ -118,6 +121,8 @@ public class FirstPersonController : MonoBehaviour
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         defaultYPosition = mainCamera.transform.localPosition.y; // Return camera to default position when not moving
         tf = gameObject.GetComponent<Transform>();
+
+        volume.profile.TryGetSettings(out vignette);
     }
 
     void Start() {
@@ -126,7 +131,10 @@ public class FirstPersonController : MonoBehaviour
         currentHealth = maxHealth;
     }
     void Update() {
-        if(CanMove) {
+        if(Input.GetKeyDown(KeyCode.L)) {
+            StartCoroutine(TakeDamageAndWait(2));
+        }
+        if(canMove) {
             terrainDataIndex = terrainTexDetector.GetActiveTerrainTextureIdx(tf.position);
             Debug.Log("Index: " + terrainDataIndex);
             HandleMovementInput();
@@ -212,25 +220,31 @@ public class FirstPersonController : MonoBehaviour
         playerHasTakenDamage = true;
         lastStabbedTime = Time.time;
         currentHealth --;
-        Debug.Log("health: " + currentHealth);
+
         switch(currentHealth) {
-            case float currentHealth when currentHealth < 15f && currentHealth > 10:
-                bleedingUI.SetActive(true);
+            case float currentHealth when currentHealth > 6 && currentHealth < 10:
+                vignette.enabled.Override(true);
+                vignette.intensity.value = 0.4f;
+                /*
                 float alpha2 = 0.2f;
                 Color particleColor = bloodParticles.color;
                 particleColor.a = alpha2;
                 bloodParticles.color = particleColor;
+                */
                 break;
-            case 1:
-                bleedingUI.SetActive(true);
+            case float currentHealth when currentHealth > 3 && currentHealth < 6:
+                vignette.enabled.Override(true);
+                vignette.intensity.Override(0.6f);
+                /*
                 float alpha1 = 1f;
                 particleColor = bloodParticles.color;
                 particleColor.a = alpha1;
                 bloodParticles.color = particleColor;
+                */
                 // heavy breathing audio? 
                 break;
             case float currentHealth when currentHealth <= 0:
-                bleedingUI.SetActive(false);
+                vignette.enabled.Override(false);
                 StopCoroutine(HandleRegenerateHealth());
                 StartCoroutine(gameController.HandlePlayerDeath());
                 break;
@@ -340,7 +354,7 @@ public class FirstPersonController : MonoBehaviour
         if (disableMovement) {
             Cursor.visible = true;
             Cursor.lockState = CursorLockMode.None; // Unlock cursor
-            CanMove = false;
+            canMove = false;
             fpHighlights.CanInteract = false;
             mouseLook.CanRotateMouse = false;
             currentMovement = Vector3.zero;
@@ -348,7 +362,7 @@ public class FirstPersonController : MonoBehaviour
         } else {
             Cursor.visible = false;
             Cursor.lockState = CursorLockMode.Locked; // Lock cursor to center of window
-            CanMove = true;
+            canMove = true;
             fpHighlights.CanInteract = true;
             mouseLook.CanRotateMouse = true;
             flashlight.ToggleFlashlightStatus(true);

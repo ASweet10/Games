@@ -6,35 +6,59 @@ using UnityEngine.SceneManagement;
 
 public class SceneFader : MonoBehaviour
 {
+    [SerializeField] GameObject blackFadeGO;
     [SerializeField] Image blackFadeImage;
-    [SerializeField] float fadeTime = 6f;
+    FirstPersonController fpsController;
     Color noAlpha = new Color(0, 0, 0, 0);
     Color fullAlpha = new Color(0, 0, 0, 255);
-    
+    public bool isFading;
+
+    void Awake () {
+        fpsController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
+    }
+
     public IEnumerator FadeInFromBlack() {
-        blackFadeImage.enabled = true;
-        float time = 0;
-        Color startColor = blackFadeImage.color;
+        blackFadeGO.SetActive(true);
+        yield return new WaitForSeconds(4f);
+        blackFadeGO.SetActive(false);
+    }
+    public IEnumerator FadeOutToBlack() {
+        blackFadeGO.SetActive(true);
+        fpsController.canMove = false;
 
-        while(time < fadeTime) {
-            blackFadeImage.color = Color.Lerp(startColor, noAlpha, time / fadeTime);
-            time += Time.deltaTime;
-            yield return null;
-        }
-        blackFadeImage.enabled = false;
+        yield return new WaitForSeconds(4f);
+
+        blackFadeGO.SetActive(false);
+        fpsController.canMove = true;
+
     }
 
-    public IEnumerator FadeOutThenLoadScene(int sceneToLoad) {
+    public IEnumerator FadeOutThenFadeIn(float delay, int optionalSceneIndex) {
+        blackFadeGO.SetActive(true);
         blackFadeImage.enabled = true;
+
+        fpsController.canMove = false;
         float time = 0;
 
-        while(time < fadeTime){
-            blackFadeImage.color = Color.Lerp(noAlpha, fullAlpha, time / fadeTime);
+        while(time < 4) {
+            blackFadeImage.color = Color.Lerp(noAlpha, fullAlpha, time / 4);
             time += Time.deltaTime;
-            yield return null;
         }
-
+        yield return new WaitForSeconds(delay);
+        while(time < 4) {
+            blackFadeImage.color = Color.Lerp(fullAlpha, noAlpha, time / 4);
+            time += Time.deltaTime;
+        }
         blackFadeImage.enabled = false;
-        SceneManager.LoadScene(sceneToLoad);         
+        blackFadeGO.SetActive(false);
+
+        fpsController.canMove = true;
+
+        if (optionalSceneIndex == 0) {
+            SceneManager.LoadScene(0);
+        } else if (optionalSceneIndex == 1) {
+            SceneManager.LoadScene(1);
+        }
     }
+
 }

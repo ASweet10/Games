@@ -12,6 +12,7 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject cursorUI;
     [SerializeField] GameObject quitGameOptionUI;
     [SerializeField] Interactables interactables;
+    [SerializeField] GameObject blackFadeGO;
 
     [Header("Objectives")]
     [SerializeField] TMP_Text popupText;
@@ -100,8 +101,8 @@ public class GameController : MonoBehaviour
         playerDeath3DObject.SetActive(true);
 
         foreach(GameObject killer in killers) {
-            AIKiller aiRef = killer.GetComponent<AIKiller>();
-            aiRef.state = AIKiller.State.idle;
+            Killer aiRef = killer.GetComponent<Killer>();
+            aiRef.state = Killer.State.idle;
         }
 
         int deathClipIndex = Random.Range(0, playerDeathClips.Length - 1);
@@ -147,12 +148,13 @@ public class GameController : MonoBehaviour
         optionsMenuUI.SetActive(toggle);
     }
     public void PlayGameButton() {
-        StartCoroutine(sceneFader.FadeOutThenLoadScene(1));
+        StartCoroutine(sceneFader.FadeOutThenFadeIn(2, 1));
     }
     public void ReturnToMenuAfterCredits() {
-        StartCoroutine(sceneFader.FadeOutThenLoadScene(0));
+        SceneManager.LoadScene(0);
     }
     public void ResumeGame() {
+        blackFadeGO.SetActive(true);
         objectiveTextInPauseMenu.enabled = false;
         pauseMenuUI.SetActive(false);
         cursorUI.SetActive(true);
@@ -163,6 +165,7 @@ public class GameController : MonoBehaviour
         gamePaused = false;
     }
     public void PauseGame() {
+        blackFadeGO.SetActive(true);
         pauseMenuUI.SetActive(true);
         cursorUI.SetActive(false);
         popupText.enabled = false;

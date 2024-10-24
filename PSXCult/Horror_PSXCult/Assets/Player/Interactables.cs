@@ -6,10 +6,12 @@ using UnityEngine;
 
 public class Interactables : MonoBehaviour 
 {
-    [SerializeField] GameController gameController;
+    GameController gameController;
     [SerializeField] GameObject dialogueUI;
     DialogueManager dialogueManager;
     FirstPersonController fpController;
+    GameObject player;
+    SceneFader sceneFader;
 
     [Header ("UI Objects")]
     [SerializeField] GameObject missingOneUI;
@@ -22,9 +24,13 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject carNoteUI;
     [SerializeField] GameObject UICamera;
     [SerializeField] TMP_Text interactText;
-    [SerializeField] GameObject gasStationDoor;
-    DoorController door;
 
+
+    [Header ("Gas Station Door")]
+    [SerializeField] AudioSource gasStationBellAudio;
+    [SerializeField] Transform gasStationSpawnpoint;
+    [SerializeField] Transform gasStationParkingLotSpawnpoint;
+    bool playerInGasStation = false;
 
     [Header ("Drinks")]
     [SerializeField] GameObject[] drinkOptions;
@@ -54,10 +60,13 @@ public class Interactables : MonoBehaviour
 
 
     void Start () {
+        playerInGasStation = false;
+        playingArcadeGame = false;
         gameController = gameObject.GetComponent<GameController>();
+        sceneFader = gameObject.GetComponent<SceneFader>();
+        player = GameObject.FindGameObjectWithTag("Player");
         dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
         fpController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
-        door = gasStationDoor.GetComponent<DoorController>();
         drinkIndex = 0;
     }
     
@@ -101,11 +110,16 @@ public class Interactables : MonoBehaviour
     }
 
     public void HandleGasStationDoor() {
-        if(door.DoorClosed) {
-            door.OpenDoor();
+        StartCoroutine(sceneFader.FadeOutThenFadeIn(1, 2));
+        gasStationBellAudio.Play();
+        if(playerInGasStation) {
+            player.transform.position = gasStationParkingLotSpawnpoint.position;
+            playerInGasStation = false;
         } else {
-            door.CloseDoor();
+            player.transform.position = gasStationSpawnpoint.position;
+            playerInGasStation = true;
         }
+
     }
 
     public void ToggleDrinksUI(bool choice) {   // Drinks in gas station
@@ -187,7 +201,7 @@ public class Interactables : MonoBehaviour
             mouseLook.enabled = false;
             interactText.text = "";
             arcadeSound.Play();
-            yield return new WaitForSeconds(2f);
+            yield return new WaitForSeconds(1.5f);
             arcadeMusicLoop.Stop();
             arcadeStartScreen.SetActive(false);
             arcadeLevelOne.SetActive(true);

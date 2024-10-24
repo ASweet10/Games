@@ -77,11 +77,9 @@ public class DialogueManager : MonoBehaviour
                 break;
             case "Hunter":
                 if(gameController.hunterWarningComplete) {
-                    currentDialogueIndex = 11; // Random hunter options
-                    Debug.Log(11);
+                    currentDialogueIndex = 16; // Random hunter options
                 } else {
                     currentDialogueIndex = 0; // Hunter warning start
-                    Debug.Log(0);
                 }
                 break;
         }

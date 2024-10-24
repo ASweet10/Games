@@ -28,7 +28,6 @@ public class FirstPersonHighlights : MonoBehaviour
     [SerializeField] string needsZippoString = "I still need a source of fire...";
     [SerializeField] string needsLighterFluidString = "I still need lighter fluid...";    
     
-    
     void Awake() {
         gameEvents = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameEvents>(); 
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>(); 
@@ -98,7 +97,7 @@ public class FirstPersonHighlights : MonoBehaviour
             case "David's Car":
                 StartCoroutine(gameController.DisplayPopupMessage(davidCarString));
                 break;
-            case "Arcade":
+            case "Red Herring":
                 StartCoroutine(interactables.ToggleArcade(true));
                 interactables.playingArcadeGame = true;
                 fpController.DisablePlayerMovement(true);
