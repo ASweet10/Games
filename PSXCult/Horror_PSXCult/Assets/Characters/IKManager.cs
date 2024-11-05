@@ -36,7 +36,9 @@ public class IKManager : MonoBehaviour
             ikActive = true;
         } else {
             lookWeight = Mathf.Lerp(lookWeight, 0, Time.deltaTime * 3f);
-            //lookWeight = 0;
+            if(lookWeight < 0) {
+                lookWeight = 0;
+            }
             ikActive = false;
         }
         //animator.SetLookAtWeight(lookWeight); commented out to avoid warning

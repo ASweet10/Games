@@ -22,16 +22,15 @@ public class Killer : MonoBehaviour
     float GetCurrentOffset => state == State.chasingPlayer ? baseStepSpeed * sprintStepMultiplier : baseStepSpeed;
     public int terrainDataIndex;
 
+
     [Header ("Patrol")]
     [SerializeField] Transform[] waypoints;
     int currentWaypoint = 0;
 
-    [Header("Movement")]
+
+    [Header("Parameters")]
     [SerializeField, Range(1, 5)] float walkSpeed = 2f;
     [SerializeField, Range(6, 10)] float sprintSpeed = 10f;
-
-    [Header("Ranges")]
-    [SerializeField] float chaseRange = 20f;
     [SerializeField] float attackRange = 3f;
     [SerializeField] float hearingRange = 15f;
     bool canAttack = true;
@@ -40,9 +39,7 @@ public class Killer : MonoBehaviour
     // killer loses sight of player due to bush / trees / etc., killer checks last seen area
     Transform playerLastSeenPosition;
 
-
-    
-    public enum State{ idle, patrolling, chasingPlayer, attacking, searchingBushes, investigatingSound };
+    public enum State{ idle, patrolling, lookAroundAtWaypoint, chasingPlayer, attacking, searchingBushes, investigatingSound };
     public State state = State.patrolling;
 
     void Start () {
@@ -70,6 +67,9 @@ public class Killer : MonoBehaviour
             case State.patrolling:
                 HandlePatrol();
                 break;
+            case State.lookAroundAtWaypoint:
+                HandleLookAroundAtWaypoint();
+                break;
             case State.chasingPlayer:
                 HandleChaseTarget();
                 break;
@@ -92,7 +92,7 @@ public class Killer : MonoBehaviour
         anim.SetBool("chasing", false);
         anim.SetBool("idle", true);
 
-        if(Vector3.Distance(tf.position, playerTF.position) <= chaseRange) {
+        if(Vector3.Distance(tf.position, playerTF.position) <= 20f) {
             if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
                 state = State.attacking;
             } else {
@@ -107,92 +107,115 @@ public class Killer : MonoBehaviour
         if(fovScript.canSeePlayer) {
             state = State.chasingPlayer;
         }
-        // if killer hears sound, investigate
 
-        //Otherwise, continue patrol behavior
         if (Vector3.Distance(tf.position, waypoints[currentWaypoint].position) > 0.01f) {
+            
+            Vector3 waypointPos = waypoints[currentWaypoint].position - tf.position;
+            //tf.rotation = Quaternion.LookRotation(waypointPos);
+            waypointPos = waypointPos.normalized * walkSpeed;
 
-            Vector3 currentMovement = waypoints[currentWaypoint].position - tf.position;
-            currentMovement = currentMovement.normalized * walkSpeed;
+            //Vector3 currentMovement = waypoints[currentWaypoint].position - tf.position;
+            //currentMovement = currentMovement.normalized * walkSpeed;
 
             if(!controller.isGrounded){
-                currentMovement.y -= 9.8f * Time.deltaTime; // Apply gravity
+                waypointPos.y -= 9.8f * Time.deltaTime; // Apply gravity
                 if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
-                    currentMovement.y = 0;
+                    waypointPos.y = 0;
                 }
             }
 
             anim.SetBool("idle", false);
-            anim.SetBool("chasing", true);
-            controller.Move(currentMovement * Time.deltaTime);
+            anim.SetBool("lookingAtWaypoint", false);
+            anim.SetBool("patrolling", true);
+
+            controller.Move(waypointPos * Time.deltaTime);
 
             HandleKillerWalkSFX();
         } else {
             currentWaypoint ++;
+            state = State.lookAroundAtWaypoint;
         }
     }
-
+    
     void HandleChaseTarget() {
-        if(Vector3.Distance(tf.position, playerTF.position) <= chaseRange) {
+        if(Vector3.Distance(tf.position, playerTF.position) <= 20f) {
             tf.LookAt(playerTF);
             tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
-            
-            anim.ResetTrigger("Stab");
-            anim.SetBool("searching", false);
+
             anim.SetBool("idle", false);
+            anim.SetBool("patrolling", false);
+            anim.SetBool("attacking", false);
             anim.SetBool("chasing", true);
 
             Vector3 currentMovement = playerTF.position - tf.position;
-            currentMovement = currentMovement.normalized * walkSpeed;
+            currentMovement = currentMovement.normalized * sprintSpeed;
    
             if(!controller.isGrounded){
-                //Debug.Log("airborne");
-                currentMovement.y -= 9.8f * Time.deltaTime; // Apply gravity
+                currentMovement.y -= 9.8f; // Apply gravity
                 if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
                     currentMovement.y = 0;
                 }
             }
-
             controller.Move(currentMovement * Time.deltaTime);
 
             if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
                 state = State.attacking;
-                Debug.Log("attack");
             }
         } else {
-            state = State.idle;
+            state = State.patrolling;
         }
     }
+
     void HandleAttack() {
         if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
-            if(canAttack) {
-                StartCoroutine(AttemptAttack());
+            tf.LookAt(playerTF);
+            tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
+
+            anim.SetBool("chasing", false);
+            anim.SetBool("attacking", true);
+            //StartCoroutine(AttemptAttack());
+            /*
+            tf.LookAt(playerTF);
+            tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
+
+            if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
+                fpController.TakeDamage("Stab");
             }
+            */
         } else {
-            //if player dead, stop attacking / go idle?
-            anim.ResetTrigger("Stab");
-            anim.SetBool("chasing", true);
+            Debug.Log("resume chase");
             state = State.chasingPlayer;
         }
     }
 
     IEnumerator AttemptAttack() {
-        canAttack = false;
+        //canAttack = false;
         //Vector3 direction = (playerTF.position - tf.position).normalized;
         //Quaternion rotation = Quaternion.LookRotation(direction);
         //tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * 60);
         tf.LookAt(playerTF);
         tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, tf.localEulerAngles.z);
 
-        anim.SetBool("chasing", false);
-        anim.SetTrigger("Stab");
+        anim.SetBool("attacking", true);
         yield return new WaitForSeconds(1f);
         if(Vector3.Distance(tf.position, playerTF.position) <= attackRange) {
-            fpController.TakeDamage("Stab");
+            //fpController.TakeDamage("Stab");
         }
-        canAttack = true;
+        //canAttack = true;
     }
+    void HandleLookAroundAtWaypoint() {
+        if(fovScript.canSeePlayer) {
+            state = State.chasingPlayer;
+        }
+        anim.SetBool("patrolling", false);
+        anim.SetBool("lookingAtWaypoint", true);
 
+        StartCoroutine(ResumePatrollingAfterDelay());
+    }
+    IEnumerator ResumePatrollingAfterDelay() {
+        yield return new WaitForSeconds(2f);
+        state = State.patrolling;
+    }
     void HandleSearch() {
         anim.SetBool("chasing", false);
         anim.SetBool("idle", false);
@@ -201,7 +224,7 @@ public class Killer : MonoBehaviour
     }
 
     void HandleInvestigateSound() {
-
+        // if killer hears something while patrolling or searching
     }
 
     void HandleKillerWalkSFX() {
@@ -225,9 +248,7 @@ public class Killer : MonoBehaviour
                             break;
                     }
             }
-
             footstepTimer = GetCurrentOffset;
         }
-
     }
 }

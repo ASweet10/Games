@@ -92,7 +92,7 @@ public class GameController : MonoBehaviour
         //Credits scroll down screen
     }
 
-    public IEnumerator HandlePlayerDeath() {
+    public IEnumerator HandlePlayerDeath() {    
         Debug.Log("Player dead");
         fpController.DisablePlayerMovement(true);
         deathCamera.enabled = true;
@@ -125,7 +125,7 @@ public class GameController : MonoBehaviour
         popupText.text = message;
         yield return new WaitForSeconds(3f);
         popupText.text = "";
-    }   
+    }
 
     public IEnumerator HandleNextObjective() {
         currentObjective ++;
@@ -161,7 +161,7 @@ public class GameController : MonoBehaviour
         popupText.enabled = true;
         AudioListener.volume = 1f;
         fpController.DisablePlayerMovement(false);
-        //Time.timeScale = 1f;
+        Time.timeScale = 1f;
         gamePaused = false;
     }
     public void PauseGame() {
@@ -171,9 +171,9 @@ public class GameController : MonoBehaviour
         popupText.enabled = false;
         objectiveTextInPauseMenu.enabled = true;
         objectiveTextInPauseMenu.text = gameObjectives[currentObjective];
-        AudioListener.volume = 0;
+        AudioListener.volume = 0.3f;
         fpController.DisablePlayerMovement(true);
-        //Time.timeScale = 0f;
+        Time.timeScale = 0f;
         gamePaused = true;
     }
 }

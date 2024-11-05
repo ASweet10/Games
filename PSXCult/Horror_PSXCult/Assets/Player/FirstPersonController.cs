@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Rendering.PostProcessing;
@@ -16,10 +15,6 @@ public class FirstPersonController : MonoBehaviour
     [SerializeField] FlashlightToggle flashlight;
     FirstPersonHighlights fpHighlights;
 
-
-    bool isSprinting => canSprint && Input.GetKey(sprintKey);
-    bool isMoving => Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
-    bool shouldJump => controller.isGrounded && Input.GetKeyDown(jumpKey);
     bool shouldCrouch => !duringCrouchAnimation && controller.isGrounded && Input.GetKeyDown(KeyCode.C);
     bool IsSliding { 
         get {
@@ -31,19 +26,15 @@ public class FirstPersonController : MonoBehaviour
             }
         }
     }
-    
-    
-    [Header("Controls")]
-    KeyCode sprintKey = KeyCode.LeftShift;
-    KeyCode jumpKey = KeyCode.Space;
-
 
     [Header("Movement")]
     [SerializeField] float walkSpeed = 10f;
-    [SerializeField] float sprintSpeed = 20f;    
-    float gravityValue = 9.8f;
+    [SerializeField] float sprintSpeed = 20f;
+    KeyCode sprintKey = KeyCode.LeftShift;
     Vector2 currentInput;
     Vector3 currentMovement;
+    bool isSprinting => canSprint && Input.GetKey(sprintKey);
+    bool isMoving => Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
 
 
     [Header("Footsteps")]
@@ -77,13 +68,10 @@ public class FirstPersonController : MonoBehaviour
     bool canSprint = true;
 
 
-    [Header("Jump")]
-    [SerializeField] float jumpForce = 10f;
-    bool canJump = true;
-
     // Sliding
     Vector3 hitPointNormal; // Angle of floor
     float slopeSpeed = 8f;
+
 
     [Header("Crouch")]
     [SerializeField] float crouchHeight = 0.5f;
@@ -136,7 +124,7 @@ public class FirstPersonController : MonoBehaviour
         }
         if(canMove) {
             terrainDataIndex = terrainTexDetector.GetActiveTerrainTextureIdx(tf.position);
-            Debug.Log("Index: " + terrainDataIndex);
+            //Debug.Log("Index: " + terrainDataIndex);
             HandleMovementInput();
             if(canCrouch) { AttemptToCrouch(); }
 
@@ -146,6 +134,8 @@ public class FirstPersonController : MonoBehaviour
             HandleMovementSFX();
             ApplyFinalMovement();
         }
+
+        Debug.Log("current hp: " + currentHealth);
     }
     void HandleMovementInput() {
         currentInput.x = Input.GetAxis("Vertical") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed :  walkSpeed);
@@ -158,7 +148,7 @@ public class FirstPersonController : MonoBehaviour
 
     void ApplyFinalMovement() {
         if(!controller.isGrounded){
-            currentMovement.y -= gravityValue * Time.deltaTime; // Apply gravity
+            currentMovement.y -= 9.8f * Time.deltaTime; // Apply gravity
             if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
                 currentMovement.y = 0;
             }
@@ -170,37 +160,6 @@ public class FirstPersonController : MonoBehaviour
         controller.Move(currentMovement * Time.deltaTime);
     }
     
-    public void AttemptToCrouch() {
-        if(shouldCrouch) {
-            StartCoroutine(CrouchOrStand());
-        }
-    }
-    private IEnumerator CrouchOrStand() {
-        // If you try to stand up and hit anything 1 unit above, cancel and remain crouched
-        if (isCrouching && Physics.Raycast(mainCamera.transform.position, Vector3.up, 1f)) {
-            yield break;
-        }
-        duringCrouchAnimation = true;
-        float timeElapsed = 0f;
-
-        // Change height
-        float targetHeight = isCrouching ? standHeight : crouchHeight;
-        float currentHeight = controller.height;
-        // Change center so you don't fall through floor
-        Vector3 targetCenter = isCrouching ? standCenter : crouchCenter;
-        Vector3 currentCenter = controller.center;
-
-        while(timeElapsed < timeToCrouch) {
-            controller.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed / timeToCrouch);
-            controller.center = Vector3.Lerp(currentCenter, targetCenter, timeElapsed / timeToCrouch);
-            timeElapsed += Time.deltaTime;
-            yield return null;
-        }
-        controller.height = targetHeight;
-        controller.center = targetCenter;
-        isCrouching = !isCrouching;
-        duringCrouchAnimation = false;
-    }
 
     public void TakeDamage(string type) {
         if(canTakeDamage) {
@@ -224,7 +183,8 @@ public class FirstPersonController : MonoBehaviour
         switch(currentHealth) {
             case float currentHealth when currentHealth > 6 && currentHealth < 10:
                 vignette.enabled.Override(true);
-                vignette.intensity.value = 0.4f;
+                //vignette.intensity.value = 0.4f;
+                vignette.intensity.Override(0.6f);
                 /*
                 float alpha2 = 0.2f;
                 Color particleColor = bloodParticles.color;
@@ -278,7 +238,7 @@ public class FirstPersonController : MonoBehaviour
                 currentHealth = maxHealth;
             }
             yield return new WaitForSeconds(0.5f);
-            Debug.Log(currentHealth);
+            //Debug.Log(currentHealth);
         }
     }
     void HandleStamina() {
@@ -313,7 +273,7 @@ public class FirstPersonController : MonoBehaviour
         if(footstepTimer <= 0) {
             if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 4)) {
                 if(hit.collider.tag == "Tile") {
-                    Debug.Log("tile");
+                    //Debug.Log("tile");
                     footstepAudioSource.PlayOneShot(concreteClips[Random.Range(0, concreteClips.Length - 1)]);
                 } else {
                     switch(terrainDataIndex) {
@@ -368,12 +328,49 @@ public class FirstPersonController : MonoBehaviour
             flashlight.ToggleFlashlightStatus(true);
         }
     }
- 
+     public void AttemptToCrouch() {
+        if(shouldCrouch) {
+            StartCoroutine(CrouchOrStand());
+        }
+    }
+    private IEnumerator CrouchOrStand() {
+        // If you try to stand up and hit anything 1 unit above, cancel and remain crouched
+        if (isCrouching && Physics.Raycast(mainCamera.transform.position, Vector3.up, 1f)) {
+            yield break;
+        }
+        duringCrouchAnimation = true;
+        float timeElapsed = 0f;
+
+        // Change height
+        float targetHeight = isCrouching ? standHeight : crouchHeight;
+        float currentHeight = controller.height;
+        // Change center so you don't fall through floor
+        Vector3 targetCenter = isCrouching ? standCenter : crouchCenter;
+        Vector3 currentCenter = controller.center;
+
+        while(timeElapsed < timeToCrouch) {
+            controller.height = Mathf.Lerp(currentHeight, targetHeight, timeElapsed / timeToCrouch);
+            controller.center = Vector3.Lerp(currentCenter, targetCenter, timeElapsed / timeToCrouch);
+            timeElapsed += Time.deltaTime;
+            yield return null;
+        }
+        controller.height = targetHeight;
+        controller.center = targetCenter;
+        isCrouching = !isCrouching;
+        duringCrouchAnimation = false;
+    }
     
+    /*
+    [Header("Jump")]
+    [SerializeField] float jumpForce = 10f;
+    KeyCode jumpKey = KeyCode.Space;
+    bool canJump = true;
+    bool shouldJump => controller.isGrounded && Input.GetKeyDown(jumpKey);
     
     void HandleJump() {
         if(shouldJump) {
             currentMovement.y = jumpForce;
         }
     }
+    */
 }

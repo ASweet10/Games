@@ -40,6 +40,9 @@ public class Interactables : MonoBehaviour
     [SerializeField] TMP_Text drinkDescription;
     public int drinkIndex;
 
+    [Header("Dog")]
+    [SerializeField] Dog dog;
+
 
     [Header("Arcade")]
     [SerializeField] GameObject arcadeStartScreen;
@@ -65,6 +68,7 @@ public class Interactables : MonoBehaviour
         gameController = gameObject.GetComponent<GameController>();
         sceneFader = gameObject.GetComponent<SceneFader>();
         player = GameObject.FindGameObjectWithTag("Player");
+        dog = GameObject.FindGameObjectWithTag("Rusty").GetComponent<Dog>();
         dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
         fpController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
         drinkIndex = 0;
@@ -119,7 +123,10 @@ public class Interactables : MonoBehaviour
             player.transform.position = gasStationSpawnpoint.position;
             playerInGasStation = true;
         }
+    }
 
+    public void HandleInteractWithDog() {
+        dog.state = Dog.State.barking;
     }
 
     public void ToggleDrinksUI(bool choice) {   // Drinks in gas station
@@ -138,6 +145,19 @@ public class Interactables : MonoBehaviour
     public void Disable3DDrinks() {
         foreach(GameObject drink in drinkOptions) {
             drink.SetActive(false);
+        }
+    }
+
+    public void PurchaseDrink(string drinkName) {
+        switch (drinkName) {
+            case "Apple Juice":
+                break;
+            case "Coffee":
+                break;
+            case "Noca Cola":
+                break;
+            case "Orange Juice":
+                break;
         }
     }
     public void ToggleMissingUI(int posterNumber, bool choice) {

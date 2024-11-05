@@ -43,6 +43,9 @@ public class FirstPersonHighlights : MonoBehaviour
             case "Door":
                 interactables.HandleGasStationDoor();
                 break;
+            case "Rusty":
+                interactables.HandleInteractWithDog();
+                break;
             case "MissingPoster1":
                 interactables.ToggleMissingUI(1, true);
                 fpController.DisablePlayerMovement(true);

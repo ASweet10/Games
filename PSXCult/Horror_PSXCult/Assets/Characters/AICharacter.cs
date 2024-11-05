@@ -17,7 +17,7 @@ public class AICharacter : MonoBehaviour
     bool atWaypoint = false;
     bool characterMoving = false;
     int currentWP = 0;
-    public enum State{ idle, walkingToWaypoint, talking, hiding, dead };
+    public enum State{ idle, walkingToWaypoint, talking, hiding, followingPlayer, dead };
     State state = State.idle;
     public State StateRef {
         get { return state; }
@@ -93,6 +93,9 @@ public class AICharacter : MonoBehaviour
                         break;
                     case State.hiding:
                         HandleHideBehavior();
+                        break;
+                    case State.followingPlayer:
+                        HandleFollowPlayer();
                         break;
                     case State.dead:
                         HandleDeath();
@@ -173,6 +176,9 @@ public class AICharacter : MonoBehaviour
         // find nearest bush you can hide in
         // If killer not within range, hide there
         // If killer within range, run away
+    }
+    void HandleFollowPlayer() {
+
     }
     void HandleDeath() {
         anim.SetBool("isWalking", false);
