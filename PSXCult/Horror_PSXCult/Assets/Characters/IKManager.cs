@@ -6,7 +6,6 @@ using UnityEngine;
 public class IKManager : MonoBehaviour
 {
     Animator animator;
-    [SerializeField] bool ikActive = false;
     [SerializeField] float lookWeight;
     [SerializeField] float desireDist;
     [SerializeField] Transform targetObj;
@@ -33,13 +32,11 @@ public class IKManager : MonoBehaviour
         if(pivotRotationY < 0.65f && pivotRotationY > -0.65f && dist < desireDist) {
             lookWeight = Mathf.Lerp(lookWeight, 1, Time.deltaTime * 3f);
             //lookWeight = 1;
-            ikActive = true;
         } else {
             lookWeight = Mathf.Lerp(lookWeight, 0, Time.deltaTime * 3f);
             if(lookWeight < 0) {
                 lookWeight = 0;
             }
-            ikActive = false;
         }
         //animator.SetLookAtWeight(lookWeight); commented out to avoid warning
     }

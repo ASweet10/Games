@@ -11,7 +11,6 @@ public class ArcadeController : MonoBehaviour
     [SerializeField] GameObject arcadeLevelOne;
     [SerializeField] GameObject arcadeBloodScreen;
     [SerializeField] GameObject arcadeBackground;
-    [SerializeField] GameObject arcadeScreenCamera;
     [SerializeField] SpriteRenderer spriteRenderer;
     [SerializeField] Rigidbody2D playerRB;
     [SerializeField] Animator anim;

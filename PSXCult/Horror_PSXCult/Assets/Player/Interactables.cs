@@ -14,11 +14,11 @@ public class Interactables : MonoBehaviour
     SceneFader sceneFader;
 
     [Header ("UI Objects")]
-    [SerializeField] GameObject missingOneUI;
-    [SerializeField] GameObject missingTwoUI;
-    [SerializeField] GameObject missingThreeUI;
-    [SerializeField] GameObject missingFourUI;
-    [SerializeField] GameObject missingFiveUI;
+    [SerializeField] GameObject missingUI_Matthew;
+    [SerializeField] GameObject missingUI_Couple;
+    [SerializeField] GameObject missingUI_Nathan;
+    [SerializeField] GameObject missingUI_Maria;
+    [SerializeField] GameObject missingUI_Amir;
     [SerializeField] GameObject gasStationNewspaperUI;
     [SerializeField] GameObject stateParkNewspaperUI;
     [SerializeField] GameObject carNoteUI;
@@ -48,19 +48,25 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject arcadeStartScreen;
     [SerializeField] GameObject arcadeLevelOne;
     [SerializeField] GameObject arcadeDeathUI;
-    [SerializeField] Camera arcadeCamera;
-    [SerializeField] Camera normalCamera;
+    [SerializeField] Camera arcadeStartCamera;
+    [SerializeField] Camera arcadePlayerCamera;
+    [SerializeField] Camera gameCamera;
     [SerializeField] ArcadeController arcadeController;
     [SerializeField] ArcadeWolf arcadeWolfScript;
     [SerializeField] FirstPersonController firstPersonController;
     [SerializeField] MouseLook mouseLook;
-    [SerializeField] AudioSource arcadeSound;
+    [SerializeField] AudioSource arcadeCoinSound;
     [SerializeField] AudioSource arcadeMusicLoop;
     [SerializeField] AudioClip arcadeMusic;
     [SerializeField] AudioClip arcadeCoinSFX;
     [SerializeField] TMP_Text escapeToExitText;
     public bool playingArcadeGame = false;
 
+    [Header("Object Pickup")]
+    GameObject heldObj;
+    Rigidbody heldObjRb;
+    Transform objectHoldPos;
+    bool canDrop = false;
 
     void Start () {
         playerInGasStation = false;
@@ -75,42 +81,8 @@ public class Interactables : MonoBehaviour
     }
     
     void Update() {
-        if(Input.GetKeyDown(KeyCode.Escape)) {
-            // Maybe loop through array; If any are active, set all inactive
-            if(drinkUI.activeInHierarchy) {
-                ToggleDrinksUI(false);
-            } else if(missingOneUI.activeInHierarchy) {
-                ToggleMissingUI(1, false);
-            } else if(missingTwoUI.activeInHierarchy) {
-                ToggleMissingUI(2, false);
-            } else if(missingThreeUI.activeInHierarchy) {
-                ToggleMissingUI(3, false);
-            } else if(missingFourUI.activeInHierarchy) {
-                ToggleMissingUI(4, false);
-            } else if(missingFiveUI.activeInHierarchy) {
-                ToggleMissingUI(5, false);
-            } else if(gasStationNewspaperUI.activeInHierarchy) {
-                ToggleMissingUI(6, false);
-            } else if(stateParkNewspaperUI.activeInHierarchy) {
-                ToggleMissingUI(7, false);
-            } else if(carNoteUI.activeInHierarchy) {
-                ToggleMissingUI(8, false);
-            } else if(dialogueUI.activeInHierarchy) {
-                dialogueManager.DialogueStop();
-            } else if(playingArcadeGame) {
-                StartCoroutine(ToggleArcade(false));
-                playingArcadeGame = false;
-            }
-            else {
-                if(gameController.gamePaused) {
-                    gameController.ResumeGame();
-                }
-                else {
-                    gameController.PauseGame();
-                }
-            }
-            fpController.DisablePlayerMovement(false);
-        }
+        HandleEscapeButtonLogic();
+        HandleObjectLogic();
     }
 
     public void HandleGasStationDoor() {
@@ -163,19 +135,19 @@ public class Interactables : MonoBehaviour
     public void ToggleMissingUI(int posterNumber, bool choice) {
         switch (posterNumber) {
             case 1:
-                missingOneUI.SetActive(choice);
+                missingUI_Matthew.SetActive(choice);
                 break;
             case 2:
-                missingTwoUI.SetActive(choice);
+                missingUI_Couple.SetActive(choice);
                 break;
             case 3:
-                missingThreeUI.SetActive(choice);
+                missingUI_Nathan.SetActive(choice);
                 break;
             case 4:
-                missingFourUI.SetActive(choice);
+                missingUI_Maria.SetActive(choice);
                 break;
             case 5:
-                missingFiveUI.SetActive(choice);
+                missingUI_Amir.SetActive(choice);
                 break;
             case 6:
                 gasStationNewspaperUI.SetActive(choice);
@@ -189,6 +161,78 @@ public class Interactables : MonoBehaviour
         }
     }
 
+    public void HandlePickUpObject(GameObject obj) {
+        if (obj.GetComponent<Rigidbody>()) {
+            heldObj = obj;
+            heldObjRb = obj.GetComponent<Rigidbody>();
+            heldObjRb.isKinematic = true;
+            heldObjRb.transform.parent = holdPos.transform; //parent object to holdposition
+            heldObj.layer = LayerNumber; //change the object layer to the holdLayer
+            //make sure object doesnt collide with player, it can cause weird bugs
+            Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), true);
+        }
+    }
+    void HandleEscapeButtonLogic() {
+        if(Input.GetKeyDown(KeyCode.Escape)) {
+            // Maybe loop through array; If any are active, set all inactive
+            if(drinkUI.activeInHierarchy) {
+                ToggleDrinksUI(false);
+            } else if(missingUI_Matthew.activeInHierarchy) {
+                ToggleMissingUI(1, false);
+            } else if(missingUI_Couple.activeInHierarchy) {
+                ToggleMissingUI(2, false);
+            } else if(missingUI_Nathan.activeInHierarchy) {
+                ToggleMissingUI(3, false);
+            } else if(missingUI_Maria.activeInHierarchy) {
+                ToggleMissingUI(4, false);
+            } else if(missingUI_Amir.activeInHierarchy) {
+                ToggleMissingUI(5, false);
+            } else if(gasStationNewspaperUI.activeInHierarchy) {
+                ToggleMissingUI(6, false);
+            } else if(stateParkNewspaperUI.activeInHierarchy) {
+                ToggleMissingUI(7, false);
+            } else if(carNoteUI.activeInHierarchy) {
+                ToggleMissingUI(8, false);
+            } else if(dialogueUI.activeInHierarchy) {
+                dialogueManager.DialogueStop();
+            } else if(playingArcadeGame) {
+                StartCoroutine(ToggleArcade(false));
+                playingArcadeGame = false;
+            }
+            else {
+                if(gameController.gamePaused) {
+                    gameController.ResumeGame();
+                }
+                else {
+                    gameController.PauseGame();
+                }
+            }
+            fpController.DisablePlayerMovement(false);
+        }
+    }
+    void HandleObjectLogic() {
+        if (heldObj != null) {
+            MoveObject(); //keep object position at holdPos
+            RotateObject();
+            if (Input.GetKeyDown(KeyCode.Mouse0) && canDrop == true) {
+                StopObjectClipping();
+                ThrowObject();
+            }
+
+        }
+    }
+    void MoveObject() {
+
+    }
+    void RotateObject() {
+
+    }
+    void StopObjectClipping() {
+
+    }
+    void ThrowObject() {
+
+    }
     public void HandlePreviousDrinkButton() {
         drinkOptions[drinkIndex].SetActive(false);
         if(drinkIndex == 0) {
@@ -214,34 +258,41 @@ public class Interactables : MonoBehaviour
     
     public IEnumerator ToggleArcade(bool playingGame) {
         if(playingGame) {
-            arcadeCamera.enabled = true;
-            normalCamera.enabled = false;
+            arcadeStartCamera.enabled = true;
+            gameCamera.enabled = false;
             arcadeController.enabled = true;
             firstPersonController.enabled = false;
             mouseLook.enabled = false;
             interactText.text = "";
-            arcadeSound.Play();
+
+            arcadeCoinSound.Play();
             yield return new WaitForSeconds(1.5f);
             arcadeMusicLoop.Stop();
             arcadeStartScreen.SetActive(false);
             arcadeLevelOne.SetActive(true);
-            arcadeController.ResetArcadePlayerPosition();
+            arcadePlayerCamera.enabled = true;
+            arcadeStartCamera.enabled = false;
 
+            arcadeController.ResetArcadePlayerPosition();
+            arcadeWolfScript.ResetWolfPosition();
             arcadeController.ResetStartTime(); // not working; wolf autospawns when you play again
 
             arcadeController.CanMove = true;
-            arcadeWolfScript.ResetWolfPosition();
-            arcadeSound.clip = arcadeMusic;
-            arcadeSound.Play();
-            arcadeSound.loop = true;
+            arcadeCoinSound.clip = arcadeMusic;
+            arcadeCoinSound.Play();
+            arcadeCoinSound.loop = true;
+
         } else {
-            normalCamera.enabled = true;
-            arcadeCamera.enabled = false;
+            gameCamera.enabled = true;
+            arcadeStartCamera.enabled = false;
+            arcadePlayerCamera.enabled = false;
+
             arcadeController.enabled = false;
             firstPersonController.enabled = true;
             mouseLook.enabled = true;
-            arcadeSound.Stop();
-            arcadeSound.clip = arcadeCoinSFX; // reset for next game
+            arcadeCoinSound.Stop();
+            arcadeCoinSound.clip = arcadeCoinSFX; // reset for next game
+
             if(arcadeLevelOne.activeInHierarchy) {
                 arcadeLevelOne.SetActive(false);
             }

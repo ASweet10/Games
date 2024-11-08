@@ -15,7 +15,7 @@ public class FlashlightToggle : MonoBehaviour
     }
     
     void HandleFlashlightInteraction() {
-        if(Input.GetKeyDown(KeyCode.F)) {
+        if(Input.GetKeyDown(flashlightKey)) {
             if(canUseFlashlight) {
                 flashlightActive = !flashlightActive;
                 flashlight.SetActive(flashlightActive);

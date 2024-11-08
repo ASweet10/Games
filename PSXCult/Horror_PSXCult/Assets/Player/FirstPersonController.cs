@@ -135,7 +135,7 @@ public class FirstPersonController : MonoBehaviour
             ApplyFinalMovement();
         }
 
-        Debug.Log("current hp: " + currentHealth);
+        //Debug.Log("current hp: " + currentHealth);
     }
     void HandleMovementInput() {
         currentInput.x = Input.GetAxis("Vertical") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed :  walkSpeed);

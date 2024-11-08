@@ -17,7 +17,9 @@ public class FirstPersonHighlights : MonoBehaviour
     
     [Header("Highlights")]
     GameObject lastHighlightedObject;
-    [SerializeField] GameObject cursor;
+    [SerializeField] Sprite normalCursor;
+    [SerializeField] Sprite handCursor;
+    [SerializeField] Image cursorImage;
     [SerializeField] TMP_Text interactText; // Text displayed on hover
 
     [Header("Interact Texts")]
@@ -46,33 +48,40 @@ public class FirstPersonHighlights : MonoBehaviour
             case "Rusty":
                 interactables.HandleInteractWithDog();
                 break;
-            case "MissingPoster1":
-                interactables.ToggleMissingUI(1, true);
+            case "MissingPoster":
                 fpController.DisablePlayerMovement(true);
+                switch(hitObj.gameObject.name) {
+                    case "MissingPosterMatthew":
+                        interactables.ToggleMissingUI(1, true);
+                        break;
+                    case "MissingPosterCouple":
+                        interactables.ToggleMissingUI(2, true);
+                        break;
+                    case "MissingPosterNathan":
+                        interactables.ToggleMissingUI(3, true);
+                        break;
+                    case "MissingPosterMaria":
+                        interactables.ToggleMissingUI(4, true);
+                        break;
+                    case "MissingPosterAmir":
+                        interactables.ToggleMissingUI(5, true);
+                        break;
+                    default:
+                        break;
+                }
                 break;
-            case "MissingPoster2":
-                interactables.ToggleMissingUI(2, true);
+            case "Newspaper":
                 fpController.DisablePlayerMovement(true);
-                break;
-            case "MissingPoster3":
-                interactables.ToggleMissingUI(3, true);
-                fpController.DisablePlayerMovement(true);
-                break;
-            case "MissingPoster4":
-                interactables.ToggleMissingUI(4, true);
-                fpController.DisablePlayerMovement(true);
-                break;
-            case "MissingPoster5":
-                interactables.ToggleMissingUI(5, true);
-                fpController.DisablePlayerMovement(true);
-                break;
-            case "GasStationNewspaper":
-                interactables.ToggleMissingUI(6, true);
-                fpController.DisablePlayerMovement(true);
-                break;
-            case "StateParkNewspaper":
-                interactables.ToggleMissingUI(7, true);
-                fpController.DisablePlayerMovement(true);
+                switch(hitObj.gameObject.name) {
+                    case "Newspaper_GasStation":
+                        interactables.ToggleMissingUI(6, true);
+                        break;
+                    case "Newspaper_StatePark":
+                        interactables.ToggleMissingUI(7, true);
+                        break;
+                    default:
+                        break;
+                }
                 break;
             case "Car Note":
                 interactables.ToggleMissingUI(8, true);
@@ -83,6 +92,9 @@ public class FirstPersonHighlights : MonoBehaviour
             case "Drinks":
                 interactables.ToggleDrinksUI(true);
                 fpController.DisablePlayerMovement(true);
+                break;
+            case "Pickup":
+                pickUpObjects.HandlePickUpObject(hitObj);
                 break;
             case "Trash":
                 StartCoroutine(gameController.DisplayPopupMessage(trashString));
@@ -202,7 +214,8 @@ public class FirstPersonHighlights : MonoBehaviour
         if (lastHighlightedObject != null) {
             //lastHighlightedObject.GetComponent<MeshRenderer>().material = originalMat;
             lastHighlightedObject = null;
-            cursor.SetActive(true);
+            cursorImage.enabled = true;
+            cursorImage.sprite = normalCursor;
             interactText.enabled = false;
         }
     }
@@ -218,9 +231,14 @@ public class FirstPersonHighlights : MonoBehaviour
             if(uiEnabled) {
                 interactText.enabled = true;
                 if(hitObj.tag == "Untagged" || hitObj.tag == "Player" || hitObj.tag == "Tile") {
+                    cursorImage.enabled = false;
                     interactText.text = "";
-                } else {
-                    cursor.SetActive(false);
+                } else if(hitObj.tag == "Pickup") {
+                    cursorImage.enabled = true;
+                    cursorImage.sprite = handCursor;
+                }
+                else {
+                    cursorImage.enabled = false;
                     interactText.text = hitObj.tag;
                 }
             }
