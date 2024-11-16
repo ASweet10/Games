@@ -1,22 +1,23 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 using BehaviorTree;
+
 public class CheckAlarmInRange : Node
 {
     Transform transform;
-    Transform[] alarmPositions;
+    Transform alarmPosition;
     Animator anim;
-    Transform closestAlarm;
-    float oldDistance = 9999f;
-    public CheckAlarmInRange(Transform tf, Transform[] alarms){
+
+    public CheckAlarmInRange(Transform tf, Transform alarm){
         transform = tf;
-        alarmPositions = alarms;
+        alarmPosition = alarm;
         anim = tf.GetComponent<Animator>();
     }
 
-
     public override NodeState Evaluate() {
+        /*
         foreach (Transform alarm in alarmPositions) {
             float dist = Vector3.Distance(transform.position, alarm.position);
             if (dist < oldDistance) {
@@ -25,13 +26,17 @@ public class CheckAlarmInRange : Node
             }
         }
         Transform target = closestAlarm;
+        */
+        if (GuardBT.canUseAlarm) {
+            if(Vector3.Distance(transform.position, alarmPosition.position) <= GuardBT.useAlarmRange){
+                anim.SetBool("RingingBell", true);
+                anim.SetBool("Walking", false);
 
-        if(Vector3.Distance(transform.position, target.position) <= GuardBT.useAlarmRange){
-            anim.SetBool("RingingBell", true);
-            anim.SetBool("Walking", false);
+                GuardBT.canUseAlarm = false;
 
-            state = NodeState.SUCCESS;
-            return state;
+                state = NodeState.SUCCESS;
+                return state;
+            }
         }
         
         state = NodeState.FAILURE;

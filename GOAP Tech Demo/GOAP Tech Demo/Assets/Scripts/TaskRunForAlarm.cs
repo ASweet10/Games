@@ -1,24 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using BehaviorTree;
 using UnityEditor.UIElements;
+
+using BehaviorTree;
 
 public class TaskRunForAlarm : Node
 {
-    [SerializeField] Transform[] alarmPositions;
+    [SerializeField] Transform alarmPosition;
     Transform transform;
     Animator anim;
-    float oldDistance = 9999;
-    Transform closestAlarm;
-    public TaskRunForAlarm(Transform tf, Transform[] alarmArray){
+
+    public TaskRunForAlarm(Transform tf, Transform alarm){
         transform = tf;
-        alarmPositions = alarmArray;
+        alarmPosition = alarm;
         anim = tf.GetComponent<Animator>();
     }
 
-
     public override NodeState Evaluate() {
+        /*
         foreach (Transform alarm in alarmPositions) {
             float dist = Vector3.Distance(transform.position, alarm.position);
             if (dist < oldDistance) {
@@ -32,7 +32,11 @@ public class TaskRunForAlarm : Node
             transform.position = Vector3.MoveTowards(transform.position, closestAlarm.position, GuardBT.speed * Time.deltaTime);
             transform.LookAt(target);
         }
-        
+        */
+        if (Vector3.Distance(transform.position, alarmPosition.position) > 1f){
+            transform.position = Vector3.MoveTowards(transform.position, alarmPosition.position, GuardBT.speed * Time.deltaTime);
+            transform.LookAt(alarmPosition);
+        }
         state = NodeState.RUNNING;
         return state;
     }

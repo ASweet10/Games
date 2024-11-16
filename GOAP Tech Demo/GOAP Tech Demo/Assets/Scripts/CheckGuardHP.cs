@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using BehaviorTree;
+
 public class CheckGuardHP : Node
 {
     Transform transform;
@@ -12,10 +13,9 @@ public class CheckGuardHP : Node
         guardManager = tf.GetComponent<GuardManager>();
     }
 
-
     public override NodeState Evaluate() {
         //Guard is healthy enough, node fails
-        if(guardManager.ReturnCurrentHP() >= GuardBT.fleeHealthValue){
+        if(guardManager.ReturnCurrentHP() >= GuardBT.fleeHealth){
             state = NodeState.FAILURE;
             return state;
         } else{

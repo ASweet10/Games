@@ -8,12 +8,11 @@ namespace BehaviorTree{
         protected NodeState state;
         public Node parent;
 
-        //Data shared between nodes; object can store any type
-        private Dictionary<string, object> dataContext = new Dictionary<string, object>();
+        private Dictionary<string, object> dataContext = new Dictionary<string, object>(); // Data shared between nodes
         protected List<Node> children = new List<Node>();
 
-        public Node() { //Default constructor; Parent is null
-            parent = null; 
+        public Node() { 
+            parent = null; //Default constructor; Parent is null
         } 
 
         public Node(List<Node> children){
@@ -36,8 +35,7 @@ namespace BehaviorTree{
         public object GetData(string key){
             object val = null;
 
-            //If object found...
-            if(dataContext.TryGetValue(key, out val)){
+            if(dataContext.TryGetValue(key, out val)){ //If object found...
                 return val;
             }
 
@@ -52,8 +50,7 @@ namespace BehaviorTree{
         public bool ClearData(string key){
             bool cleared = false;
 
-            //If object found...
-            if(dataContext.ContainsKey(key)){
+            if(dataContext.ContainsKey(key)){  //If object found...
                 dataContext.Remove(key);
                 return true;
             }

@@ -1,28 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
+
 using BehaviorTree;
 
-// GuardBT placed on game object that uses logic
-// AI can see world state, tracks can_see_player, player_in_range, etc.
-// Define goals: Condition and desired world state, i.e. player dead
-// Define actions: Preconditions (required state) and effects (resulting state due to action)
-// Every frame: Select goal with highest priority that also has satisfiable conditions
-// Planner runs through all possible actions, applies effects, determines if this path results in desired state
+// GuardBT: place on enemy that uses logic; AI can see state, track player, etc.
+// Goals: Condition and desired world state, i.e. player dead
+// Actions: Preconditions (required state) and effects (resulting state due to action)
+// Every frame: Select highest-priority goal with satisfiable conditions
+// Planner runs through all possible actions, determines if path results in desired state
 // Take best action and execute; Rinse repeat
+
 public class GuardBT : Tree
 {
     public UnityEngine.Transform[] waypoints;
-    public UnityEngine.Transform[] alarmPositions;
-    public static UnityEngine.Transform chosenAlarm = null;
+    public UnityEngine.Transform alarmPosition;
+    //public static UnityEngine.Transform chosenAlarm = null;
     public static float speed = 4f;
     public static float innerFOVRange = 9f;
     public static float outerFOVRange = 18f;
     public static float attackRange = 3f;
     public static float useAlarmRange = 2f;
-    public static int fleeHealthValue = 3;
-    public static float fleeSpeed = 5f;
+    public static int fleeHealth = 3;
+    public static bool canUseAlarm = true;
 
-    public enum GuardType {Aggressive, RunAtLowHP, RunForAlarm}
+    public enum GuardType {Aggressive, RunForAlarm, Flanker}
     public GuardType guardType;
 
     protected override Node SetupTree() {
@@ -40,12 +41,21 @@ public class GuardBT : Tree
                 new TaskPatrol(transform, waypoints), //Default behavior, lowest priority
                 });
                 return root;
-            case GuardType.RunAtLowHP:
+            case GuardType.RunForAlarm:
                 root = new Selector(new List<Node>{
-                new Sequence(new List<Node> {
-                    new CheckGuardHP(transform),
-                    new TaskRunAway(transform)
+                new Sequence(new List<Node>{
+                    new CheckAlarmInRange(transform, alarmPosition),
+                    new TaskRingAlarmBell(transform, alarmPosition)
                 }),
+                new Sequence(new List<Node>{
+                    new CheckEnemyInFOVCones(transform),
+                    new TaskRunForAlarm(transform, alarmPosition)
+                }),
+                new TaskPatrol(transform, waypoints), //Default behavior, lowest priority
+                });
+                return root;
+            case GuardType.Flanker:
+                root = new Selector(new List<Node>{
                 new Sequence(new List<Node> {
                     new CheckEnemyInAttackRange(transform),
                     new TaskAttack(transform)
@@ -53,19 +63,6 @@ public class GuardBT : Tree
                 new Sequence(new List<Node> {
                     new CheckEnemyInFOVCones(transform),
                     new TaskGoToTarget(transform)
-                }),
-                new TaskPatrol(transform, waypoints), //Default behavior, lowest priority
-                });
-                return root;
-            case GuardType.RunForAlarm:
-                root = new Selector(new List<Node>{
-                new Sequence(new List<Node>{
-                    new CheckAlarmInRange(transform, alarmPositions),
-                    new TaskRingAlarmBell(transform, alarmPositions)
-                }),
-                new Sequence(new List<Node>{
-                    new CheckEnemyInFOVCones(transform),
-                    new TaskRunForAlarm(transform, alarmPositions)
                 }),
                 new TaskPatrol(transform, waypoints), //Default behavior, lowest priority
                 });
@@ -85,5 +82,23 @@ public class GuardBT : Tree
                 return root;
         }
     }
-    
 }
+/*
+case GuardType.RunAtLowHP:
+    root = new Selector(new List<Node>{
+    new Sequence(new List<Node> {
+        new CheckGuardHP(transform),
+        new TaskRunAway(transform)
+    }),
+    new Sequence(new List<Node> {
+        new CheckEnemyInAttackRange(transform),
+        new TaskAttack(transform)
+    }),
+    new Sequence(new List<Node> {
+        new CheckEnemyInFOVCones(transform),
+        new TaskGoToTarget(transform)
+    }),
+    new TaskPatrol(transform, waypoints), //Default behavior, lowest priority
+    });
+    return root;
+*/

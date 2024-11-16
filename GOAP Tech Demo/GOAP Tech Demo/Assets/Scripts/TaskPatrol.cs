@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 
 using BehaviorTree;
+
 public class TaskPatrol : Node
 {
     [SerializeField] Transform[] waypoints;

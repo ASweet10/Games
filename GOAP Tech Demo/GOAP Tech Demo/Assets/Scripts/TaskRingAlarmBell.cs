@@ -1,23 +1,24 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 using BehaviorTree;
+
 public class TaskRingAlarmBell : Node
 {
-    [SerializeField] Transform[] alarmPositions;
+    [SerializeField] Transform alarmPosition;
     Transform transform;
     Animator anim;
     AudioSource bellAudioSource;
-    Transform closestAlarm;
-    float oldDistance = 9999f;
-    public TaskRingAlarmBell(Transform tf, Transform[] alarms){
+    
+    public TaskRingAlarmBell(Transform tf, Transform alarm){
         transform = tf;
-        alarmPositions = alarms;
+        alarmPosition = alarm;
         anim = tf.GetComponent<Animator>();
     }
 
-
     public override NodeState Evaluate() {
+        /*
         foreach (Transform alarm in alarmPositions) {
             float dist = Vector3.Distance(transform.position, alarm.position);
             if (dist < oldDistance) {
@@ -29,10 +30,16 @@ public class TaskRingAlarmBell : Node
         bellAudioSource = target.GetComponent<AudioSource>();
 
         if (Vector3.Distance(transform.position, target.position) < GuardBT.useAlarmRange) {
-            Debug.Log(Vector3.Distance(transform.position, target.position));
             transform.LookAt(target);
-            anim.SetBool("RingingBell", true);
             anim.SetBool("Walking", false);
+            anim.SetBool("RingingBell", true);
+            bellAudioSource.Play();
+        }
+        */
+        if (Vector3.Distance(transform.position, alarmPosition.position) < GuardBT.useAlarmRange) {
+            transform.LookAt(alarmPosition);
+            anim.SetBool("Walking", false);
+            anim.SetBool("RingingBell", true);
             bellAudioSource.Play();
         }
         

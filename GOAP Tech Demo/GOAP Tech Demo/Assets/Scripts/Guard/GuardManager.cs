@@ -13,15 +13,9 @@ public class GuardManager : MonoBehaviour
     public void TakeSwordHit(){
         currentHealth --;
         Debug.Log(currentHealth);
-        if(currentHealth > 0){
-            //change UI, lose heart, etc.
-        } else {
-            //kill guard, play death animation
+        if(currentHealth <= 0){
+            // kill guard / death animation
         }
-    }
-    public void TakeKnockout(){
-        //play knockout animation
-        //Diable guard bt script
     }
     public int ReturnCurrentHP(){
         return currentHealth;
