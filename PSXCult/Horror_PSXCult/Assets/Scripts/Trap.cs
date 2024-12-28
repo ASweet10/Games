@@ -20,8 +20,8 @@ public class Trap : MonoBehaviour
     }
 
     IEnumerator DisableMovementOnTimer() {
-        fpController.DisablePlayerMovement(true);
+        fpController.DisablePlayerMovement(true, false);
         yield return new WaitForSeconds(2f);
-        fpController.DisablePlayerMovement(false);
+        fpController.DisablePlayerMovement(false, false);
     }
 }

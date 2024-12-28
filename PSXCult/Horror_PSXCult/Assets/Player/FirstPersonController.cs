@@ -100,7 +100,6 @@ public class FirstPersonController : MonoBehaviour
 
     public bool canMove = true;
 
-    
     void Awake() {
         fpHighlights = gameObject.GetComponent<FirstPersonHighlights>();
         footstepAudioSource = gameObject.GetComponent<AudioSource>();
@@ -114,21 +113,21 @@ public class FirstPersonController : MonoBehaviour
     }
 
     void Start() {
-        DisablePlayerMovement(false);
+        DisablePlayerMovement(false, false);
         currentStamina = maxStamina;
         currentHealth = maxHealth;
     }
+    /*
     void Update() {
         if(Input.GetKeyDown(KeyCode.L)) {
             StartCoroutine(TakeDamageAndWait(2));
         }
         if(canMove) {
             terrainDataIndex = terrainTexDetector.GetActiveTerrainTextureIdx(tf.position);
-            //Debug.Log("Index: " + terrainDataIndex);
             HandleMovementInput();
-            if(canCrouch) { AttemptToCrouch(); }
-
-            // if(canJump) { HandleJump(); }
+            if(canCrouch) { 
+                AttemptToCrouch(); 
+            }
             HandleHeadbobEffect();
             HandleStamina();
             HandleMovementSFX();
@@ -137,29 +136,8 @@ public class FirstPersonController : MonoBehaviour
 
         //Debug.Log("current hp: " + currentHealth);
     }
-    void HandleMovementInput() {
-        currentInput.x = Input.GetAxis("Vertical") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed :  walkSpeed);
-        currentInput.y = Input.GetAxis("Horizontal") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed);
-
-        float currentMovementY = currentMovement.y;
-        currentMovement = (tf.forward * currentInput.x) + (transform.right * currentInput.y);
-        currentMovement.y = currentMovementY;
-    }
-
-    void ApplyFinalMovement() {
-        if(!controller.isGrounded){
-            currentMovement.y -= 9.8f * Time.deltaTime; // Apply gravity
-            if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
-                currentMovement.y = 0;
-            }
-        }
-
-        if(IsSliding) {
-            currentMovement += new Vector3(hitPointNormal.x, -hitPointNormal.y, hitPointNormal.z) * slopeSpeed;
-        }
-        controller.Move(currentMovement * Time.deltaTime);
-    }
-    
+    */
+   
 
     public void TakeDamage(string type) {
         if(canTakeDamage) {
@@ -241,26 +219,6 @@ public class FirstPersonController : MonoBehaviour
             //Debug.Log(currentHealth);
         }
     }
-    void HandleStamina() {
-        if(currentStamina < 0) {
-            currentStamina = 0;
-            windedAudioSource.Play();
-            canSprint = false;
-        }
-
-        if(isSprinting) {
-            currentStamina -= 1f * Time.deltaTime; // Sprinting
-        } else {
-            if(canSprint == false) {
-                if(currentStamina < maxStamina) { // Not sprinting, regenerate stamina
-                    currentStamina += 1f * Time.deltaTime;
-                } else {
-                    currentStamina = maxStamina;
-                    canSprint = true;
-                }
-            }
-        }
-    }
 
     void HandleMovementSFX() {
         if(!controller.isGrounded || !isMoving) {
@@ -294,39 +252,39 @@ public class FirstPersonController : MonoBehaviour
         }
 
     }
-    void HandleHeadbobEffect() {
-        if(!controller.isGrounded) {
-            return;
-        }
-        if(Mathf.Abs(currentMovement.x) > 0.1f || Mathf.Abs(currentMovement.z) > 0.1f) {
-            timer += Time.deltaTime * (isCrouching ? crouchBobSpeed : isSprinting ? sprintBobSpeed : walkBobSpeed);
-             // return Sin of angle; between -1 and 1
-             //  Multiply this value by amount depending on current movement
-            mainCamera.transform.localPosition = new Vector3(
-                mainCamera.transform.localPosition.x,
-                defaultYPosition + Mathf.Sin(timer) * (isCrouching ? crouchBobAmount : isSprinting ? sprintBobAmount : walkBobAmount),
-                mainCamera.transform.localPosition.z
-            );
-        }
-    }
 
-    public void DisablePlayerMovement(bool disableMovement) {
+    public void DisablePlayerMovement(bool disableMovement, bool showCursor) {
         if (disableMovement) {
-            Cursor.visible = true;
-            Cursor.lockState = CursorLockMode.None; // Unlock cursor
             canMove = false;
             fpHighlights.CanInteract = false;
             mouseLook.CanRotateMouse = false;
             currentMovement = Vector3.zero;
             flashlight.ToggleFlashlightStatus(false);
         } else {
-            Cursor.visible = false;
-            Cursor.lockState = CursorLockMode.Locked; // Lock cursor to center of window
             canMove = true;
             fpHighlights.CanInteract = true;
             mouseLook.CanRotateMouse = true;
             flashlight.ToggleFlashlightStatus(true);
         }
+        
+        if(showCursor) {
+            Debug.Log("a");
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        } else {
+            Debug.Log("b");
+            Cursor.visible = false;
+            Cursor.lockState = CursorLockMode.Locked;
+        }
+        
+    }
+
+    public void RotateTowardsSpeaker(GameObject target) {
+        Debug.Log("test");
+        Vector3 direction = target.transform.position - tf.position;
+        Quaternion rotation = Quaternion.LookRotation(direction);
+        tf.rotation = Quaternion.Slerp(tf.rotation, rotation, Time.deltaTime * 15f);
+        tf.localEulerAngles = new Vector3(0f, tf.localEulerAngles.y, 0);
     }
      public void AttemptToCrouch() {
         if(shouldCrouch) {
@@ -359,7 +317,66 @@ public class FirstPersonController : MonoBehaviour
         isCrouching = !isCrouching;
         duringCrouchAnimation = false;
     }
+
+    void HandleMovementInput() {
+        currentInput.x = Input.GetAxis("Vertical") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed :  walkSpeed);
+        currentInput.y = Input.GetAxis("Horizontal") * (isCrouching ? crouchSpeed : isSprinting ? sprintSpeed : walkSpeed);
+
+        float currentMovementY = currentMovement.y;
+        currentMovement = (tf.forward * currentInput.x) + (transform.right * currentInput.y);
+        currentMovement.y = currentMovementY;
+    }
+
+    void ApplyFinalMovement() {
+        if(!controller.isGrounded){
+            currentMovement.y -= 9.8f * Time.deltaTime; // Apply gravity
+            if(controller.velocity.y < -1 && controller.isGrounded){  //Landing frame; reset y value to 0
+                currentMovement.y = 0;
+            }
+        }
+        if(IsSliding) {
+            currentMovement += new Vector3(hitPointNormal.x, -hitPointNormal.y, hitPointNormal.z) * slopeSpeed;
+        }
+        controller.Move(currentMovement * Time.deltaTime);
+    }
     
+    void HandleHeadbobEffect() {
+        if(!controller.isGrounded) {
+            return;
+        }
+        if(Mathf.Abs(currentMovement.x) > 0.1f || Mathf.Abs(currentMovement.z) > 0.1f) {
+            timer += Time.deltaTime * (isCrouching ? crouchBobSpeed : isSprinting ? sprintBobSpeed : walkBobSpeed);
+             // return Sin of angle; between -1 and 1
+             //  Multiply this value by amount depending on current movement
+            mainCamera.transform.localPosition = new Vector3(
+                mainCamera.transform.localPosition.x,
+                defaultYPosition + Mathf.Sin(timer) * (isCrouching ? crouchBobAmount : isSprinting ? sprintBobAmount : walkBobAmount),
+                mainCamera.transform.localPosition.z
+            );
+        }
+    }
+    void HandleStamina() {
+        if(currentStamina < 0) {
+            currentStamina = 0;
+            windedAudioSource.Play();
+            canSprint = false;
+        }
+
+        if(isSprinting) {
+            currentStamina -= 1f * Time.deltaTime; // Sprinting
+        } else {
+            if(canSprint == false) {
+                if(currentStamina < maxStamina) { // Not sprinting, regenerate stamina
+                    currentStamina += 1f * Time.deltaTime;
+                } else {
+                    currentStamina = maxStamina;
+                    canSprint = true;
+                }
+            }
+        }
+    }
+
+
     /*
     [Header("Jump")]
     [SerializeField] float jumpForce = 10f;

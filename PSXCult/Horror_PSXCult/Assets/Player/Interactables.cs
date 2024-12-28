@@ -10,6 +10,7 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject dialogueUI;
     DialogueManager dialogueManager;
     FirstPersonController fpController;
+    FirstPersonHighlights fpHighlights;
     GameObject player;
     SceneFader sceneFader;
 
@@ -36,13 +37,11 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject[] drinkOptions;
     [SerializeField] String[] drinkDescriptions;
     [SerializeField] GameObject drinkUI;
+    [SerializeField] GameObject useDrinkUI;
+    [SerializeField] GameObject drinkCollider;
     [SerializeField] TMP_Text drinkTitle;
     [SerializeField] TMP_Text drinkDescription;
     public int drinkIndex;
-
-    [Header("Dog")]
-    [SerializeField] Dog dog;
-
 
     [Header("Arcade")]
     [SerializeField] GameObject arcadeStartScreen;
@@ -60,13 +59,7 @@ public class Interactables : MonoBehaviour
     [SerializeField] AudioClip arcadeMusic;
     [SerializeField] AudioClip arcadeCoinSFX;
     [SerializeField] TMP_Text escapeToExitText;
-    public bool playingArcadeGame = false;
-
-    [Header("Object Pickup")]
-    GameObject heldObj;
-    Rigidbody heldObjRb;
-    Transform objectHoldPos;
-    bool canDrop = false;
+    public bool playingArcadeGame;
 
     void Start () {
         playerInGasStation = false;
@@ -74,31 +67,28 @@ public class Interactables : MonoBehaviour
         gameController = gameObject.GetComponent<GameController>();
         sceneFader = gameObject.GetComponent<SceneFader>();
         player = GameObject.FindGameObjectWithTag("Player");
-        dog = GameObject.FindGameObjectWithTag("Rusty").GetComponent<Dog>();
         dialogueManager = GameObject.FindGameObjectWithTag("Player").GetComponent<DialogueManager>();
         fpController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
+        fpHighlights = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonHighlights>();        
         drinkIndex = 0;
     }
     
     void Update() {
-        HandleEscapeButtonLogic();
-        HandleObjectLogic();
+        //HandleEscapeButtonLogic();
     }
 
     public void HandleGasStationDoor() {
-        StartCoroutine(sceneFader.FadeOutThenFadeIn(1, 2));
-        gasStationBellAudio.Play();
-        if(playerInGasStation) {
-            player.transform.position = gasStationParkingLotSpawnpoint.position;
-            playerInGasStation = false;
-        } else {
-            player.transform.position = gasStationSpawnpoint.position;
-            playerInGasStation = true;
+        if(!gameController.holdingGasStationItem) { // Disable door when holding item
+            StartCoroutine(sceneFader.FadeOutThenFadeIn(1, 2));
+            gasStationBellAudio.Play();
+            if(playerInGasStation) {
+                player.transform.position = gasStationParkingLotSpawnpoint.position;
+                playerInGasStation = false;
+            } else {
+                player.transform.position = gasStationSpawnpoint.position;
+                playerInGasStation = true;
+            }
         }
-    }
-
-    public void HandleInteractWithDog() {
-        dog.state = Dog.State.barking;
     }
 
     public void ToggleDrinksUI(bool choice) {   // Drinks in gas station
@@ -114,125 +104,131 @@ public class Interactables : MonoBehaviour
             }
         }
     }
+
     public void Disable3DDrinks() {
         foreach(GameObject drink in drinkOptions) {
             drink.SetActive(false);
         }
     }
 
-    public void PurchaseDrink(string drinkName) {
-        switch (drinkName) {
-            case "Apple Juice":
-                break;
-            case "Coffee":
-                break;
-            case "Noca Cola":
-                break;
-            case "Orange Juice":
-                break;
-        }
+    public void ToggleUseDrinkUI(bool toggle) {
+        useDrinkUI.SetActive(toggle);
     }
-    public void ToggleMissingUI(int posterNumber, bool choice) {
-        switch (posterNumber) {
+
+    public void PurchaseDrink() {
+        gameController.chosenDrinkIndex = drinkIndex;
+        gameController.hasDrink = true;
+        drinkCollider.tag = "Untagged";
+        fpHighlights.ClearHighlighted();
+        Disable3DDrinks();
+        drinkUI.SetActive(false);
+        fpController.DisablePlayerMovement(false, false);
+    }
+
+    public void UseDrink() {
+        switch(gameController.chosenDrinkIndex) {
+            case 0:
+                //"Orange Juice [+5 top speed 1 min]"
+                break;
             case 1:
-                missingUI_Matthew.SetActive(choice);
+                //"Coffee [x2 max stamina 30 sec]"
                 break;
             case 2:
-                missingUI_Couple.SetActive(choice);
+                //"Noca Cola [+10 top speed 15 sec]"
                 break;
             case 3:
+                //"Energy Drink [Unlimited stamina 15 sec]"
+                break;
+        }
+        ToggleUseDrinkUI(false);
+        gameController.hasDrink = false;
+        // Remove drink from pause menu, disable drink objects?
+    }
+    public void ToggleMissingUI(string posterName, bool choice) {
+        switch (posterName) {
+            case "MissingPosterMatthew":
+                missingUI_Matthew.SetActive(choice);
+                break;
+            case "MissingPosterCouple":
+                missingUI_Couple.SetActive(choice);
+                break;
+            case "MissingPosterNathan":
                 missingUI_Nathan.SetActive(choice);
                 break;
-            case 4:
+            case "MissingPosterMaria":
                 missingUI_Maria.SetActive(choice);
                 break;
-            case 5:
+            case "MissingPosterAmir":
                 missingUI_Amir.SetActive(choice);
                 break;
-            case 6:
+            case "Newspaper_GasStation":
                 gasStationNewspaperUI.SetActive(choice);
                 break;
-            case 7:
+            case "Newspaper_StatePark":
                 stateParkNewspaperUI.SetActive(choice);
                 break;
-            case 8:
+            case "StartingNote":
                 carNoteUI.SetActive(choice);
                 break;
         }
     }
 
-    public void HandlePickUpObject(GameObject obj) {
-        if (obj.GetComponent<Rigidbody>()) {
-            heldObj = obj;
-            heldObjRb = obj.GetComponent<Rigidbody>();
-            heldObjRb.isKinematic = true;
-            heldObjRb.transform.parent = holdPos.transform; //parent object to holdposition
-            heldObj.layer = LayerNumber; //change the object layer to the holdLayer
-            //make sure object doesnt collide with player, it can cause weird bugs
-            Physics.IgnoreCollision(heldObj.GetComponent<Collider>(), player.GetComponent<Collider>(), true);
-        }
-    }
+
     void HandleEscapeButtonLogic() {
         if(Input.GetKeyDown(KeyCode.Escape)) {
-            // Maybe loop through array; If any are active, set all inactive
             if(drinkUI.activeInHierarchy) {
                 ToggleDrinksUI(false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(missingUI_Matthew.activeInHierarchy) {
-                ToggleMissingUI(1, false);
+                ToggleMissingUI("MissingPosterMatthew", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(missingUI_Couple.activeInHierarchy) {
-                ToggleMissingUI(2, false);
+                ToggleMissingUI("MissingPosterCouple", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(missingUI_Nathan.activeInHierarchy) {
-                ToggleMissingUI(3, false);
+                ToggleMissingUI("MissingPosterNathan", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(missingUI_Maria.activeInHierarchy) {
-                ToggleMissingUI(4, false);
+                ToggleMissingUI("MissingPosterMaria", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(missingUI_Amir.activeInHierarchy) {
-                ToggleMissingUI(5, false);
+                ToggleMissingUI("MissingPosterAmir", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(gasStationNewspaperUI.activeInHierarchy) {
-                ToggleMissingUI(6, false);
+                ToggleMissingUI("Newspaper_GasStation", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(stateParkNewspaperUI.activeInHierarchy) {
-                ToggleMissingUI(7, false);
+                ToggleMissingUI("Newspaper_StatePark", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(carNoteUI.activeInHierarchy) {
-                ToggleMissingUI(8, false);
+                ToggleMissingUI("StartingNote", false);
+                fpController.DisablePlayerMovement(false, false);
+                return;
             } else if(dialogueUI.activeInHierarchy) {
                 dialogueManager.DialogueStop();
             } else if(playingArcadeGame) {
                 StartCoroutine(ToggleArcade(false));
                 playingArcadeGame = false;
-            }
-            else {
+            } else {
                 if(gameController.gamePaused) {
                     gameController.ResumeGame();
+                    Debug.Log("resume");
                 }
                 else {
                     gameController.PauseGame();
                 }
             }
-            fpController.DisablePlayerMovement(false);
         }
     }
-    void HandleObjectLogic() {
-        if (heldObj != null) {
-            MoveObject(); //keep object position at holdPos
-            RotateObject();
-            if (Input.GetKeyDown(KeyCode.Mouse0) && canDrop == true) {
-                StopObjectClipping();
-                ThrowObject();
-            }
 
-        }
-    }
-    void MoveObject() {
-
-    }
-    void RotateObject() {
-
-    }
-    void StopObjectClipping() {
-
-    }
-    void ThrowObject() {
-
-    }
     public void HandlePreviousDrinkButton() {
         drinkOptions[drinkIndex].SetActive(false);
         if(drinkIndex == 0) {

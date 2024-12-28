@@ -11,7 +11,9 @@ public class FirstPersonHighlights : MonoBehaviour
     GameEvents gameEvents;
     GameController gameController;
     Interactables interactables;
+    [SerializeField] PickUpObjects pickupObjects;
     FirstPersonController fpController;
+
     [SerializeField] Camera mainCamera;
     public bool CanInteract;
     
@@ -38,63 +40,33 @@ public class FirstPersonHighlights : MonoBehaviour
     }
 
     void Update() {
-        if(CanInteract) { HandleInteraction(); }
+        //if(CanInteract) { HandleInteraction(); }
     }
     void DetermineInteractionType(GameObject hitObj) {
         switch(hitObj.GetComponent<Collider>().gameObject.tag) {
             case "Door":
                 interactables.HandleGasStationDoor();
                 break;
-            case "Rusty":
-                interactables.HandleInteractWithDog();
-                break;
             case "MissingPoster":
-                fpController.DisablePlayerMovement(true);
-                switch(hitObj.gameObject.name) {
-                    case "MissingPosterMatthew":
-                        interactables.ToggleMissingUI(1, true);
-                        break;
-                    case "MissingPosterCouple":
-                        interactables.ToggleMissingUI(2, true);
-                        break;
-                    case "MissingPosterNathan":
-                        interactables.ToggleMissingUI(3, true);
-                        break;
-                    case "MissingPosterMaria":
-                        interactables.ToggleMissingUI(4, true);
-                        break;
-                    case "MissingPosterAmir":
-                        interactables.ToggleMissingUI(5, true);
-                        break;
-                    default:
-                        break;
-                }
+                fpController.DisablePlayerMovement(true, false);
+                interactables.ToggleMissingUI(hitObj.gameObject.name, true);
                 break;
             case "Newspaper":
-                fpController.DisablePlayerMovement(true);
-                switch(hitObj.gameObject.name) {
-                    case "Newspaper_GasStation":
-                        interactables.ToggleMissingUI(6, true);
-                        break;
-                    case "Newspaper_StatePark":
-                        interactables.ToggleMissingUI(7, true);
-                        break;
-                    default:
-                        break;
-                }
+                fpController.DisablePlayerMovement(true, false);
+                interactables.ToggleMissingUI(hitObj.gameObject.name, true);
                 break;
             case "Car Note":
-                interactables.ToggleMissingUI(8, true);
+                interactables.ToggleMissingUI(hitObj.gameObject.name, true);
                 gameController.playerHasReadCarNote = true;
                 gameController.HandleNextObjective();
-                fpController.DisablePlayerMovement(true);
+                fpController.DisablePlayerMovement(true, false);
                 break;
             case "Drinks":
                 interactables.ToggleDrinksUI(true);
-                fpController.DisablePlayerMovement(true);
+                fpController.DisablePlayerMovement(true, true);
                 break;
             case "Pickup":
-                pickUpObjects.HandlePickUpObject(hitObj);
+                //pickupObjects.HandlePickUpObject(hitObj);
                 break;
             case "Trash":
                 StartCoroutine(gameController.DisplayPopupMessage(trashString));
@@ -115,7 +87,7 @@ public class FirstPersonHighlights : MonoBehaviour
             case "Red Herring":
                 StartCoroutine(interactables.ToggleArcade(true));
                 interactables.playingArcadeGame = true;
-                fpController.DisablePlayerMovement(true);
+                fpController.DisablePlayerMovement(true, false);
                 break;
             case "Firewood":
                 gameEvents.HandleCollectFirewood();
@@ -130,13 +102,13 @@ public class FirstPersonHighlights : MonoBehaviour
                 hitObj.SetActive(false);
                 break;
             case "Start Fire":
-                if(gameController.playerNeedsLighterFluid) {
-                    if(gameController.playerNeedsZippo) {
+                if(!gameController.hasLighterFluid) {
+                    if(!gameController.hasZippo) {
                         StartCoroutine(gameController.DisplayPopupMessage(needsZippoAndLighterFluidString));
                     } else {
                         StartCoroutine(gameController.DisplayPopupMessage(needsLighterFluidString));
                     }
-                } else if (gameController.playerNeedsZippo) {
+                } else if (!gameController.hasZippo) {
                     StartCoroutine(gameController.DisplayPopupMessage(needsZippoString));
                 } else {
                     StartCoroutine(gameEvents.StartCampFire());
@@ -147,9 +119,6 @@ public class FirstPersonHighlights : MonoBehaviour
                 break;
             case "Head To Park":
                 StartCoroutine(gameController.HandleDriveToParkCutscene());
-                break;
-            case "Escape":
-                StartCoroutine(gameController.HandleEscapeCutscene());
                 break;
             case "HiddenItem":
                 break;
@@ -210,7 +179,7 @@ public class FirstPersonHighlights : MonoBehaviour
             }
         }
     }
-    void ClearHighlighted() {
+    public void ClearHighlighted() {
         if (lastHighlightedObject != null) {
             //lastHighlightedObject.GetComponent<MeshRenderer>().material = originalMat;
             lastHighlightedObject = null;

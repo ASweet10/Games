@@ -18,7 +18,7 @@ public class MouseLook : MonoBehaviour
 
     void Update() {
         if(canRotateMouse) {
-            HandleMouseLook();
+            //HandleMouseLook();
         }
     }
 
@@ -27,7 +27,7 @@ public class MouseLook : MonoBehaviour
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
         xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -55f, 55f); //  Clamp camera rotation so you can't look past a certain point 
+        xRotation = Mathf.Clamp(xRotation, -65f, 65f); //  Clamp camera rotation so you can't look past a certain point 
 
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
         playerBody.Rotate(Vector3.up * mouseX);

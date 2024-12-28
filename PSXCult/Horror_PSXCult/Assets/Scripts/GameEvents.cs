@@ -60,8 +60,8 @@ public class GameEvents : MonoBehaviour
 
             foreach(GameObject wood in firewood) {
                 wood.tag = "Untagged";
-                var outline = wood.GetComponent<Outline>();
-                outline.enabled = false;
+                //var outline = wood.GetComponent<Outline>();
+                //outline.enabled = false;
 
                 var woodCollider = wood.GetComponent<BoxCollider>();
                 woodCollider.enabled = false;
@@ -83,16 +83,16 @@ public class GameEvents : MonoBehaviour
     }
 
     public void HandleCollectZippo() {
-        gameController.playerNeedsZippo = false;
+        gameController.hasZippo = true;
         itemPickupAudio.Play();
-        if(!gameController.playerNeedsLighterFluid) {
+        if(gameController.hasLighterFluid) {
             StartCoroutine(gameController.HandleNextObjective());
         }
     }
     public void HandleCollectLighterFluid() {
-        gameController.playerNeedsLighterFluid = false;
+        gameController.hasLighterFluid = true;
         itemPickupAudio.Play();
-        if(!gameController.playerNeedsZippo) {
+        if(gameController.hasZippo) {
             StartCoroutine(gameController.HandleNextObjective());
         }
     }
@@ -115,7 +115,7 @@ public class GameEvents : MonoBehaviour
 
 
     public void HandleCollectCarKeys() {
-        gameController.playerNeedsCarKeys = false;
+        gameController.hasCarKeys = true;
         itemPickupAudio.Play();
         StartCoroutine(gameController.HandleNextObjective());
         // enable car keys in pause menu

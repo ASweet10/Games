@@ -9,10 +9,10 @@ public class GameController : MonoBehaviour
 {
     [SerializeField] GameObject playerRef;
     [SerializeField] GameObject pauseMenuUI;
-    [SerializeField] GameObject cursorUI;
     [SerializeField] GameObject quitGameOptionUI;
     [SerializeField] Interactables interactables;
     [SerializeField] GameObject blackFadeGO;
+
 
     [Header("Objectives")]
     [SerializeField] TMP_Text popupText;
@@ -20,6 +20,7 @@ public class GameController : MonoBehaviour
     [SerializeField] TMP_Text objectiveTextInPauseMenu;
     [SerializeField] FirstPersonController fpController;
     [SerializeField] string[] gameObjectives;
+
 
     public bool holdingGasStationItem = false;
     public bool hasPurchasedGas = false;
@@ -29,10 +30,14 @@ public class GameController : MonoBehaviour
     public bool playerHasReadCarNote = false;
     public bool playerNeedsFirewood = true;
     public bool tentCompleted = false;
-    public bool playerNeedsZippo = true;
-    public bool playerNeedsLighterFluid = true;
-    public bool playerNeedsCarKeys = true;
+    public bool hasZippo = false;
+    public bool hasLighterFluid = false;
+    public bool hasCarKeys = false;
     public bool fireStarted = false;
+
+    public bool hasDrink = false;
+    public int chosenDrinkIndex = 0;
+    
 
     [Header ("Player Death & Checkpoints")]
     [SerializeField] Camera mainCamera;
@@ -57,6 +62,8 @@ public class GameController : MonoBehaviour
     public int currentObjective = 4;
 
     void Start() {
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
         //currentObjective = 0;
         //currentCheckpoint = 0;
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
@@ -71,30 +78,9 @@ public class GameController : MonoBehaviour
         sceneFader = gameObject.GetComponent<SceneFader>();
         //StartCoroutine(HandlePlayerDeath());
     }
-
-    public IEnumerator HandleIntroCutscene() {
-        //First cutscene; player driving down road & title card
-        yield return null;
-    }
-    public IEnumerator HandleDriveToParkCutscene() {
-        Debug.Log("drive to park");
-        //fade to black
-        //cutscene shows player driving to park
-        //park car and see friend there
-        yield return null;
-    }
-    public IEnumerator HandleEscapeCutscene() {
-        //Fade to black
-        yield return new WaitForSeconds(2.5f);
-        //Fade in from black
-        //Play music
-        //Cutscene watching player drive away
-        //Credits scroll down screen
-    }
-
     public IEnumerator HandlePlayerDeath() {    
         Debug.Log("Player dead");
-        fpController.DisablePlayerMovement(true);
+        fpController.DisablePlayerMovement(true, true);
         deathCamera.enabled = true;
         mainCamera.enabled = false;
         deathUI.SetActive(true);
@@ -115,12 +101,11 @@ public class GameController : MonoBehaviour
             bloodPool.SetActive(true);
         }
     }
-    public void ReplayFromDeath() {
-        playerRef.transform.position = restartPositions[currentCheckpoint].position;
-        playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
-    }
 
-    /*  MENUS, TEXT, etc. */
+
+
+
+    /**** Menus ****/
     public IEnumerator DisplayPopupMessage(string message) {
         popupText.text = message;
         yield return new WaitForSeconds(3f);
@@ -143,6 +128,7 @@ public class GameController : MonoBehaviour
     public void ConfirmQuitGame() {
         Application.Quit();
     }
+
     public void ToggleOptionsMenu(bool toggle) {
         mainMenuUI.SetActive(!toggle);
         optionsMenuUI.SetActive(toggle);
@@ -157,23 +143,48 @@ public class GameController : MonoBehaviour
         blackFadeGO.SetActive(true);
         objectiveTextInPauseMenu.enabled = false;
         pauseMenuUI.SetActive(false);
-        cursorUI.SetActive(true);
         popupText.enabled = true;
         AudioListener.volume = 1f;
-        fpController.DisablePlayerMovement(false);
-        Time.timeScale = 1f;
+        fpController.DisablePlayerMovement(false, false);
+        //Time.timeScale = 1f;
         gamePaused = false;
     }
     public void PauseGame() {
         blackFadeGO.SetActive(true);
         pauseMenuUI.SetActive(true);
-        cursorUI.SetActive(false);
         popupText.enabled = false;
         objectiveTextInPauseMenu.enabled = true;
         objectiveTextInPauseMenu.text = gameObjectives[currentObjective];
         AudioListener.volume = 0.3f;
-        fpController.DisablePlayerMovement(true);
-        Time.timeScale = 0f;
+        fpController.DisablePlayerMovement(true, true);
+        //Time.timeScale = 0f;
         gamePaused = true;
+    }
+
+
+
+
+    public IEnumerator HandleIntroCutscene() {
+        //First cutscene; player driving down road & title card
+        yield return null;
+    }
+    public IEnumerator HandleDriveToParkCutscene() {
+        Debug.Log("drive to park");
+        //fade to black
+        //cutscene shows player driving to park
+        //park car and see friend there
+        yield return null;
+    }
+    public IEnumerator HandleEscapeCutscene() {
+        //Fade to black
+        yield return new WaitForSeconds(2.5f);
+        //Fade in from black
+        //Play music
+        //Cutscene watching player drive away
+        //Credits scroll down screen
+    }
+    public void ReplayFromDeath() {
+        playerRef.transform.position = restartPositions[currentCheckpoint].position;
+        playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
     }
 }
