@@ -117,7 +117,7 @@ public class FirstPersonController : MonoBehaviour
         currentStamina = maxStamina;
         currentHealth = maxHealth;
     }
-    /*
+    
     void Update() {
         if(Input.GetKeyDown(KeyCode.L)) {
             StartCoroutine(TakeDamageAndWait(2));
@@ -136,7 +136,6 @@ public class FirstPersonController : MonoBehaviour
 
         //Debug.Log("current hp: " + currentHealth);
     }
-    */
    
 
     public void TakeDamage(string type) {

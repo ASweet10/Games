@@ -21,7 +21,7 @@ public class MouseLook : MonoBehaviour
 
         xRotation -= mouseY;
         //Clamp camera rotation so you can't look past a certain point 
-        xRotation = Mathf.Clamp(xRotation, -55f, 55f);
+        xRotation = Mathf.Clamp(xRotation, -65f, 65f);
 
         transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
 

@@ -1,9 +1,8 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+
 
 public class GameController : MonoBehaviour
 {
@@ -62,22 +61,21 @@ public class GameController : MonoBehaviour
     public int currentObjective = 4;
 
     void Start() {
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
         //currentObjective = 0;
         //currentCheckpoint = 0;
         if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
-            //Cursor.lockState = CursorLockMode.None;
+            Cursor.lockState = CursorLockMode.None;
             //Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
-            //Cursor.visible = true;
+            Cursor.visible = true;
         }
         else {
-            //Cursor.lockState = CursorLockMode.Locked; //Lock cursor to center of game window
             interactables.enabled = true;
         }
         sceneFader = gameObject.GetComponent<SceneFader>();
-        //StartCoroutine(HandlePlayerDeath());
     }
+
+
+    /* Player Death */
     public IEnumerator HandlePlayerDeath() {    
         Debug.Log("Player dead");
         fpController.DisablePlayerMovement(true, true);
@@ -102,23 +100,13 @@ public class GameController : MonoBehaviour
         }
     }
 
-
+    public void ReplayFromDeath() {
+        playerRef.transform.position = restartPositions[currentCheckpoint].position;
+        playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
+    }
 
 
     /**** Menus ****/
-    public IEnumerator DisplayPopupMessage(string message) {
-        popupText.text = message;
-        yield return new WaitForSeconds(3f);
-        popupText.text = "";
-    }
-
-    public IEnumerator HandleNextObjective() {
-        currentObjective ++;
-        //objectivePopupText.text = "Next Objective:  " + gameObjectives[currentObjective];
-        objectivePopupText.enabled = true;
-        yield return new WaitForSeconds(4);
-        objectivePopupText.enabled = false;
-    }
     public void OpenQuitGameUI() {
         quitGameOptionUI.SetActive(true);
     }
@@ -139,6 +127,7 @@ public class GameController : MonoBehaviour
     public void ReturnToMenuAfterCredits() {
         SceneManager.LoadScene(0);
     }
+
     public void ResumeGame() {
         blackFadeGO.SetActive(true);
         objectiveTextInPauseMenu.enabled = false;
@@ -162,29 +151,19 @@ public class GameController : MonoBehaviour
     }
 
 
+    /* Text Display */
+    public IEnumerator DisplayPopupMessage(string message) {
+        popupText.text = message;
+        yield return new WaitForSeconds(3f);
+        popupText.text = "";
+    }
+    public IEnumerator HandleNextObjective() {
+        currentObjective ++;
+        //objectivePopupText.text = "Next Objective:  " + gameObjectives[currentObjective];
+        objectivePopupText.enabled = true;
+        yield return new WaitForSeconds(4);
+        objectivePopupText.enabled = false;
+    }
 
 
-    public IEnumerator HandleIntroCutscene() {
-        //First cutscene; player driving down road & title card
-        yield return null;
-    }
-    public IEnumerator HandleDriveToParkCutscene() {
-        Debug.Log("drive to park");
-        //fade to black
-        //cutscene shows player driving to park
-        //park car and see friend there
-        yield return null;
-    }
-    public IEnumerator HandleEscapeCutscene() {
-        //Fade to black
-        yield return new WaitForSeconds(2.5f);
-        //Fade in from black
-        //Play music
-        //Cutscene watching player drive away
-        //Credits scroll down screen
-    }
-    public void ReplayFromDeath() {
-        playerRef.transform.position = restartPositions[currentCheckpoint].position;
-        playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
-    }
 }

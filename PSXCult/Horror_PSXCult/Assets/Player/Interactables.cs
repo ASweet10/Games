@@ -6,6 +6,10 @@ using UnityEngine;
 
 public class Interactables : MonoBehaviour 
 {
+    KeyCode escape = KeyCode.Escape; // For build
+    KeyCode twoKey = KeyCode.Alpha2; // for testing
+
+
     GameController gameController;
     [SerializeField] GameObject dialogueUI;
     DialogueManager dialogueManager;
@@ -74,7 +78,7 @@ public class Interactables : MonoBehaviour
     }
     
     void Update() {
-        //HandleEscapeButtonLogic();
+        HandleEscapeButtonLogic();
     }
 
     public void HandleGasStationDoor() {
@@ -175,7 +179,7 @@ public class Interactables : MonoBehaviour
 
 
     void HandleEscapeButtonLogic() {
-        if(Input.GetKeyDown(KeyCode.Escape)) {
+        if(Input.GetKeyDown(twoKey)) {
             if(drinkUI.activeInHierarchy) {
                 ToggleDrinksUI(false);
                 fpController.DisablePlayerMovement(false, false);

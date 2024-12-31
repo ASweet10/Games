@@ -6,3 +6,4 @@
 ## SFX
 # Bell ringing loudly.wav - Fenodyrie (freesound)
 # Opening Antique Trunk - Latches and Opening.wav - rodincoil (freesound)
+# Coin Interaction - andersmmg (freesound)

@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 
 using BehaviorTree;
+using UnityEngine;
 
 // GuardBT: place on enemy that uses logic; AI can see state, track player, etc.
 // Goals: Condition and desired world state, i.e. player dead
@@ -10,12 +11,15 @@ using BehaviorTree;
 // Planner runs through all possible actions, determines if path results in desired state
 // Take best action and execute; Rinse repeat
 
-public class GuardBT : Tree
+public class GuardBT : BehaviorTree.Tree
 {
     public UnityEngine.Transform[] waypoints;
     public UnityEngine.Transform alarmPosition;
+    public AudioSource bellAudio;
     //public static UnityEngine.Transform chosenAlarm = null;
-    public static float speed = 4f;
+    public static float gravity = -9.8f;
+    public static float walkSpeed = 5f;
+    public static float runSpeed = 10f;
     public static float innerFOVRange = 9f;
     public static float outerFOVRange = 18f;
     public static float attackRange = 3f;
@@ -45,7 +49,7 @@ public class GuardBT : Tree
                 root = new Selector(new List<Node>{
                 new Sequence(new List<Node>{
                     new CheckAlarmInRange(transform, alarmPosition),
-                    new TaskRingAlarmBell(transform, alarmPosition)
+                    new TaskRingAlarmBell(transform, alarmPosition, bellAudio)
                 }),
                 new Sequence(new List<Node>{
                     new CheckEnemyInFOVCones(transform),

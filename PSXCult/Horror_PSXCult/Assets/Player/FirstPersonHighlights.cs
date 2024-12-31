@@ -11,6 +11,7 @@ public class FirstPersonHighlights : MonoBehaviour
     GameEvents gameEvents;
     GameController gameController;
     Interactables interactables;
+    Cutscenes cutscenes;
     [SerializeField] PickUpObjects pickupObjects;
     FirstPersonController fpController;
 
@@ -36,11 +37,12 @@ public class FirstPersonHighlights : MonoBehaviour
         gameEvents = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameEvents>(); 
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>(); 
         interactables = GameObject.FindGameObjectWithTag("GameController").GetComponent<Interactables>();
+        cutscenes = GameObject.FindGameObjectWithTag("GameController").GetComponent<Cutscenes>();
         fpController = gameObject.GetComponent<FirstPersonController>();
     }
 
     void Update() {
-        //if(CanInteract) { HandleInteraction(); }
+        if(CanInteract) { HandleInteraction(); }
     }
     void DetermineInteractionType(GameObject hitObj) {
         switch(hitObj.GetComponent<Collider>().gameObject.tag) {
@@ -118,7 +120,7 @@ public class FirstPersonHighlights : MonoBehaviour
                 gameEvents.HandleBuildFire();
                 break;
             case "Head To Park":
-                StartCoroutine(gameController.HandleDriveToParkCutscene());
+                StartCoroutine(cutscenes.HandleDriveToParkCutscene());
                 break;
             case "HiddenItem":
                 break;
@@ -174,7 +176,6 @@ public class FirstPersonHighlights : MonoBehaviour
                     if(outline != null) {
                         outline.enabled = false;
                     }
-
                 }
             }
         }

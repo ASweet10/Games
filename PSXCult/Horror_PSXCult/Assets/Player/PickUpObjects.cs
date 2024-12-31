@@ -20,7 +20,7 @@ public class PickUpObjects : MonoBehaviour
         fpHighlights = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonHighlights>();
     }
     void Update() {
-        //HandleObjectLogic();
+        HandleObjectLogic();
     }
 
     void HandleObjectLogic() {

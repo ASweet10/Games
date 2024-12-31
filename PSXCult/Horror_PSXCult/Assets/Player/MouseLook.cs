@@ -18,7 +18,7 @@ public class MouseLook : MonoBehaviour
 
     void Update() {
         if(canRotateMouse) {
-            //HandleMouseLook();
+            HandleMouseLook();
         }
     }
 

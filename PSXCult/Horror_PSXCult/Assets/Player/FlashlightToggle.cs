@@ -11,7 +11,7 @@ public class FlashlightToggle : MonoBehaviour
     bool canUseFlashlight = true;
 
     void Update() {
-        //HandleFlashlightInteraction();
+        HandleFlashlightInteraction();
     }
     
     void HandleFlashlightInteraction() {

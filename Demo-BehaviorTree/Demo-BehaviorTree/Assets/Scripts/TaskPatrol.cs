@@ -11,7 +11,7 @@ public class TaskPatrol : Node
     Animator anim;
     Transform transform;
     int currentWP = 0;
-    [SerializeField] float waitTime = 2f;
+    [SerializeField] float waitTime = 3f;
     float waitCounter = 0f;
     bool waiting = false;
 
@@ -28,33 +28,39 @@ public class TaskPatrol : Node
             waitCounter += Time.deltaTime;
             if(waitCounter >= waitTime){
                 waiting = false;
+                anim.SetBool("Looking", false);
                 anim.SetBool("Walking", true);
             }
         }
         else{
             Transform wp = waypoints[currentWP];
-            if(Vector3.Distance(transform.position, wp.position) < 0.01f) {
+
+            if(Vector3.Distance(transform.position, wp.position) < 1f) {
                 transform.position = wp.position;
                 waitCounter = 0f;
                 waiting = true;
                 anim.SetBool("Walking", false);
+                anim.SetBool("Looking", true);
 
-            if(currentWP == waypoints.Length - 1) {
-                currentWP = 0;
-            } else {
-                currentWP++;
+                if(currentWP == waypoints.Length - 1) {
+                    currentWP = 0;
+                } else {
+                    currentWP++;
+                }
+            } else { // Move to point
+                Vector3 targetPosition = new Vector3(waypoints[currentWP].position.x, transform.position.y, waypoints[currentWP].position.z);
+
+                transform.LookAt(targetPosition);
+                Quaternion rot = transform.localRotation;
+                rot.y -= 90;
+                transform.localRotation = rot;
+
+                Vector3 moveDirection = Vector3.MoveTowards(transform.position, waypoints[currentWP].position, GuardBT.walkSpeed * Time.deltaTime);
+                if(moveDirection.y > 0) {
+                    moveDirection.y += GuardBT.gravity * Time.deltaTime;
+                }
+                transform.position = moveDirection;
             }
-        }
-        else{
-            /*
-            if(!controller.isGrounded){
-                verticalSpeed -= gravityValue * Time.deltaTime;
-                currentMovement.y = verticalSpeed;
-            }
-            */
-            transform.position = Vector3.MoveTowards(transform.position, waypoints[currentWP].position, GuardBT.speed * Time.deltaTime);
-            transform.LookAt(waypoints[currentWP].position);
-        }
         }
 
         state = NodeState.RUNNING;

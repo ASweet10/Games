@@ -14,7 +14,9 @@ public class SceneFader : MonoBehaviour
     public bool isFading;
 
     void Awake () {
-        fpsController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
+        if(SceneManager.GetActiveScene().buildIndex != 0) {  // If main menu
+            fpsController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
+        }
     }
 
     public IEnumerator FadeInFromBlack() {
