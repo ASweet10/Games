@@ -4,6 +4,7 @@ public class PickUpObjects : MonoBehaviour
 {
     GameController gameController;
     FirstPersonHighlights fpHighlights;
+    MouseLook mouseLook;
     [SerializeField] GameObject heldObjUI;
     [SerializeField] GameObject player;
     [SerializeField] Transform objectHoldPos;
@@ -18,6 +19,7 @@ public class PickUpObjects : MonoBehaviour
         layerNumber = LayerMask.NameToLayer("holdObject");
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         fpHighlights = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonHighlights>();
+        mouseLook = gameObject.GetComponent<MouseLook>();
     }
     void Update() {
         HandleObjectLogic();
@@ -82,10 +84,7 @@ public class PickUpObjects : MonoBehaviour
     void RotateObject() {
         if (Input.GetKey(KeyCode.R)) {
             canDrop = false; // Disable throw while rotating
-
-            //disable player being able to look around
-            //mouseLookScript.verticalSensitivity = 0f;
-            //mouseLookScript.lateralSensitivity = 0f;
+            mouseLook.CanRotateMouse = false;
 
             float XaxisRotation = Input.GetAxis("Mouse X") * rotationSensitivity;
             float YaxisRotation = Input.GetAxis("Mouse Y") * rotationSensitivity;
@@ -94,9 +93,7 @@ public class PickUpObjects : MonoBehaviour
             heldObj.transform.Rotate(Vector3.right, YaxisRotation);
         }
         else {
-            //re-enable player being able to look around
-            //mouseLookScript.verticalSensitivity = originalvalue;
-            //mouseLookScript.lateralSensitivity = originalvalue;
+            mouseLook.CanRotateMouse = true;
             canDrop = true;
         }
     }

@@ -35,7 +35,7 @@ public class SceneFader : MonoBehaviour
 
     }
 
-    public IEnumerator FadeOutThenFadeIn(float delay, int optionalSceneIndex) {
+    public IEnumerator FadeOutThenFadeIn(float delay, int sceneIndex) {
         blackFadeGO.SetActive(true);
         blackFadeImage.enabled = true;
 
@@ -53,14 +53,9 @@ public class SceneFader : MonoBehaviour
         }
         blackFadeImage.enabled = false;
         blackFadeGO.SetActive(false);
-
         fpsController.canMove = true;
 
-        if (optionalSceneIndex == 0) {
-            SceneManager.LoadScene(0);
-        } else if (optionalSceneIndex == 1) {
-            SceneManager.LoadScene(1);
-        }
+        SceneManager.LoadScene(sceneIndex);
     }
 
 }

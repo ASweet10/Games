@@ -6,7 +6,9 @@ using UnityEngine;
 public class GameEvents : MonoBehaviour
 {
     [SerializeField] GameObject hunter;
+    FirstPersonHighlights fpHighlights;
     GameController gameController;
+    Interactables interactables;
     [SerializeField] AudioSource itemPickupAudio;
 
     [Header("Campfire")]
@@ -37,7 +39,9 @@ public class GameEvents : MonoBehaviour
     [SerializeField] GameObject davidRef;
 
     void Start() {
-        gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
+        interactables = gameObject.GetComponent<Interactables>();
+        gameController = gameObject.GetComponent<GameController>();
+        fpHighlights = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonHighlights>();
         firewoodCollected = 0;
         //TransitionToNighttime();
     }
@@ -53,16 +57,9 @@ public class GameEvents : MonoBehaviour
             StartCoroutine(gameController.HandleNextObjective());
 
             campfireTransparent.SetActive(true);
-            zippo.tag = "Zippo";
-            zippo.GetComponent<BoxCollider>().enabled = true;
-            lighterFluid.tag = "Lighter Fluid";
-            lighterFluid.GetComponent<BoxCollider>().enabled = true;
 
             foreach(GameObject wood in firewood) {
                 wood.tag = "Untagged";
-                //var outline = wood.GetComponent<Outline>();
-                //outline.enabled = false;
-
                 var woodCollider = wood.GetComponent<BoxCollider>();
                 woodCollider.enabled = false;
             }
@@ -72,18 +69,27 @@ public class GameEvents : MonoBehaviour
             foreach(GameObject tentFlap in tentFlaps) {
                 tentFlap.SetActive(true);
             }
-            SpawnHunterAtCamp();
         }
     }
 
     public void HandleBuildFire() {
-        campfireTransparent.SetActive(false);
-        campfire.SetActive(true);
-        campfire.tag = "Start Fire";
+        if(gameController.currentObjective == 5) {
+            campfireTransparent.SetActive(false);
+            campfire.SetActive(true);
+            campfire.tag = "Start Fire";
+
+            zippo.tag = "Zippo";
+            zippo.GetComponent<BoxCollider>().enabled = true;
+            lighterFluid.tag = "Lighter Fluid";
+            lighterFluid.GetComponent<BoxCollider>().enabled = true;
+
+            StartCoroutine(gameController.HandleNextObjective());
+        }
     }
 
     public void HandleCollectZippo() {
         gameController.hasZippo = true;
+        interactables.TogglePauseMenuObject("zippo", true);
         itemPickupAudio.Play();
         if(gameController.hasLighterFluid) {
             StartCoroutine(gameController.HandleNextObjective());
@@ -91,14 +97,21 @@ public class GameEvents : MonoBehaviour
     }
     public void HandleCollectLighterFluid() {
         gameController.hasLighterFluid = true;
+        interactables.TogglePauseMenuObject("lighterFluid", true);
         itemPickupAudio.Play();
         if(gameController.hasZippo) {
             StartCoroutine(gameController.HandleNextObjective());
         }
     }
     public IEnumerator StartCampFire() {
+        fpHighlights.ClearHighlighted();
+
         campfire.tag = "Untagged";
         campfireCollider.tag = "Untagged";
+
+        interactables.TogglePauseMenuObject("zippo", false);
+        interactables.TogglePauseMenuObject("lighterFluid", false);
+
         // Animation of lighter fluid pouring onto fire
         // Animation of zippo starting fire? 
         //   or match thrown onto fire? (change from zippo -> match?)
@@ -111,11 +124,14 @@ public class GameEvents : MonoBehaviour
         Instantiate(fireBigSmoke, campfirePosition.position, Quaternion.identity);
         gameController.fireStarted = true;
         gameController.HandleNextObjective();
+
+        SpawnHunterAtCamp();
     }
 
 
     public void HandleCollectCarKeys() {
         gameController.hasCarKeys = true;
+        interactables.TogglePauseMenuObject("keys", true);
         itemPickupAudio.Play();
         StartCoroutine(gameController.HandleNextObjective());
         // enable car keys in pause menu

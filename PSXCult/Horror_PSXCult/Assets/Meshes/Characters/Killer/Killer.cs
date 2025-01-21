@@ -6,10 +6,10 @@ public class Killer : MonoBehaviour
 {
     [SerializeField] Animator anim;
     [SerializeField] Transform playerTF;
-    [SerializeField] FirstPersonController fpController;
     Transform tf;
     FieldOfView fovScript;
     CharacterController controller;
+    
     
     [Header("Footsteps")]
     TerrainTexDetector terrainTexDetector;
@@ -30,7 +30,7 @@ public class Killer : MonoBehaviour
 
     [Header("Parameters")]
     [SerializeField, Range(1, 5)] float walkSpeed = 2f;
-    [SerializeField, Range(6, 10)] float sprintSpeed = 10f;
+    [SerializeField, Range(5, 20)] float sprintSpeed = 10f;
     [SerializeField] float attackRange = 3f;
     [SerializeField] float hearingRange = 15f;
     bool canAttack = true;
@@ -44,7 +44,6 @@ public class Killer : MonoBehaviour
 
     void Start () {
         playerTF = GameObject.FindGameObjectWithTag("Player").GetComponent<Transform>();
-        fpController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
         fovScript = gameObject.GetComponent<FieldOfView>();
         anim = gameObject.GetComponent<Animator>();
         tf = gameObject.GetComponent<Transform>();
@@ -126,6 +125,7 @@ public class Killer : MonoBehaviour
 
             anim.SetBool("idle", false);
             anim.SetBool("lookingAtWaypoint", false);
+            anim.SetBool("chasing", false);
             anim.SetBool("patrolling", true);
 
             controller.Move(waypointPos * Time.deltaTime);

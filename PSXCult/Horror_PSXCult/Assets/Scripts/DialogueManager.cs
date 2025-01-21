@@ -8,6 +8,7 @@ public class DialogueManager : MonoBehaviour
 {
     GameController gameController;
     FirstPersonController firstPersonController;
+    FirstPersonHighlights fpHighlights;
     MouseLook mouseLook;
 
     [SerializeField] GameObject dialogueParent;
@@ -34,6 +35,7 @@ public class DialogueManager : MonoBehaviour
         dialogueParent.SetActive(false); // Hide dialogue by default
         gameController = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameController>();
         firstPersonController = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonController>();
+        fpHighlights = GameObject.FindGameObjectWithTag("Player").GetComponent<FirstPersonHighlights>();
         mouseLook = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<MouseLook>();
     }
 
@@ -49,6 +51,7 @@ public class DialogueManager : MonoBehaviour
         dialogueList = textToPrint;
 
         firstPersonController.DisablePlayerMovement(true, true);
+        fpHighlights.ClearHighlighted();
         StartCoroutine(HandleZoomIn(true));
 
         switch(speakerName) {

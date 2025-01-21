@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using System.Collections.Generic;
 
 
 public class GameController : MonoBehaviour
@@ -55,6 +56,15 @@ public class GameController : MonoBehaviour
     [SerializeField] GameObject optionsMenuUI;
     [SerializeField] GameObject[] expositionUIObjects;
 
+    
+    [Header ("Endings")]
+    [SerializeField] TMP_Text endingHeader;
+    [SerializeField] TMP_Text endingMessage;
+    List<string> endingMessages = new List<string>() {
+        "You thought about it and realized this is probably a bad idea. You'd rather be at home snuggled up in a blanket.",
+        "You managed to escape and immediately alerted the authorities. You tell them that, unfortunately, you weren't able to save your friends.",
+        "Most people would focus on saving their own skin and you went back. You are truly a good friend."
+    };
     public bool gamePaused = false;
     SceneFader sceneFader;
     int currentCheckpoint = 0;
@@ -63,7 +73,7 @@ public class GameController : MonoBehaviour
     void Start() {
         //currentObjective = 0;
         //currentCheckpoint = 0;
-        if(SceneManager.GetActiveScene().buildIndex == 0) {  // If main menu
+        if(SceneManager.GetActiveScene().buildIndex != 1) {  // If main menu / ending
             Cursor.lockState = CursorLockMode.None;
             //Cursor.SetCursor(arrowCursor, Vector2.zero, CursorMode.Auto);
             Cursor.visible = true;
@@ -74,37 +84,10 @@ public class GameController : MonoBehaviour
         sceneFader = gameObject.GetComponent<SceneFader>();
     }
 
-
-    /* Player Death */
-    public IEnumerator HandlePlayerDeath() {    
-        Debug.Log("Player dead");
-        fpController.DisablePlayerMovement(true, true);
-        deathCamera.enabled = true;
-        mainCamera.enabled = false;
-        deathUI.SetActive(true);
-        playerDeath3DObject.SetActive(true);
-
-        foreach(GameObject killer in killers) {
-            Killer aiRef = killer.GetComponent<Killer>();
-            aiRef.state = Killer.State.idle;
-        }
-
-        int deathClipIndex = Random.Range(0, playerDeathClips.Length - 1);
-        deathClipIndex = 3;
-        playerDeathAnimator.SetInteger("deathClipIndex", deathClipIndex);
-        Debug.Log(deathClipIndex);
-
-        yield return new WaitForSeconds(5f);
-        if(deathClipIndex == 2) {
-            bloodPool.SetActive(true);
-        }
-    }
-
     public void ReplayFromDeath() {
         playerRef.transform.position = restartPositions[currentCheckpoint].position;
         playerRef.transform.rotation = restartPositions[currentCheckpoint].rotation;
     }
-
 
     /**** Menus ****/
     public void OpenQuitGameUI() {
@@ -124,7 +107,7 @@ public class GameController : MonoBehaviour
     public void PlayGameButton() {
         StartCoroutine(sceneFader.FadeOutThenFadeIn(2, 1));
     }
-    public void ReturnToMenuAfterCredits() {
+    public void ReturnToMainMenu() {
         SceneManager.LoadScene(0);
     }
 
@@ -165,5 +148,32 @@ public class GameController : MonoBehaviour
         objectivePopupText.enabled = false;
     }
 
+    public IEnumerator HandlePlayerDeath() {    
+        fpController.DisablePlayerMovement(true, true);
+        deathCamera.enabled = true;
+        mainCamera.enabled = false;
+        deathUI.SetActive(true);
+        playerDeath3DObject.SetActive(true);
 
+        foreach(GameObject killer in killers) {
+            Killer aiRef = killer.GetComponent<Killer>();
+            //aiRef.state = Killer.State.idle;
+            //aiRef.state = Killer.State.patrol; ?
+        }
+
+        int deathClipIndex = Random.Range(0, playerDeathClips.Length - 1);
+        deathClipIndex = 3;
+        playerDeathAnimator.SetInteger("deathClipIndex", deathClipIndex);
+
+        yield return new WaitForSeconds(5f);
+        if(deathClipIndex == 2) {
+            bloodPool.SetActive(true);
+        }
+    }
+
+
+    public void SetEndingMessage(int endingNumber) {
+        endingHeader.text = "Ending " + (endingNumber + 1) + " of 3";
+        endingMessage.text = endingMessages[endingNumber];
+    }
 }

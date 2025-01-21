@@ -37,6 +37,7 @@ public class Interactables : MonoBehaviour
     [SerializeField] Transform gasStationParkingLotSpawnpoint;
     bool playerInGasStation = false;
 
+
     [Header ("Drinks")]
     [SerializeField] GameObject[] drinkOptions;
     [SerializeField] String[] drinkDescriptions;
@@ -45,7 +46,17 @@ public class Interactables : MonoBehaviour
     [SerializeField] GameObject drinkCollider;
     [SerializeField] TMP_Text drinkTitle;
     [SerializeField] TMP_Text drinkDescription;
+    [SerializeField] AudioSource drinkAudio;
     public int drinkIndex;
+
+
+    [Header ("Pause Menu")]
+    [SerializeField] GameObject pauseMenuLighterFluid;
+    [SerializeField] GameObject pauseMenuZippo;
+    [SerializeField] GameObject pauseMenuKeychain;
+    [SerializeField] GameObject[] pauseMenuDrinks;
+
+
 
     [Header("Arcade")]
     [SerializeField] GameObject arcadeStartScreen;
@@ -122,6 +133,7 @@ public class Interactables : MonoBehaviour
     public void PurchaseDrink() {
         gameController.chosenDrinkIndex = drinkIndex;
         gameController.hasDrink = true;
+        TogglePauseMenuObject("drink", true);
         drinkCollider.tag = "Untagged";
         fpHighlights.ClearHighlighted();
         Disable3DDrinks();
@@ -146,7 +158,27 @@ public class Interactables : MonoBehaviour
         }
         ToggleUseDrinkUI(false);
         gameController.hasDrink = false;
-        // Remove drink from pause menu, disable drink objects?
+        TogglePauseMenuObject("drink", false);
+        drinkAudio.Play();
+    }
+
+    public void TogglePauseMenuObject(string objectName, bool choice) {
+        switch(objectName) {
+            case "zippo":
+                pauseMenuZippo.SetActive(choice);
+                break;
+            case "lighterFluid":
+                pauseMenuLighterFluid.SetActive(choice);
+                break;
+            case "keys":
+                pauseMenuKeychain.SetActive(choice);
+                break;
+            case "drink":
+                pauseMenuDrinks[drinkIndex].SetActive(choice);
+                break;
+            default:
+                break;
+        }
     }
     public void ToggleMissingUI(string posterName, bool choice) {
         switch (posterName) {
