@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
@@ -16,8 +14,7 @@ public class PlayerController : MonoBehaviour
     KeyCode sprintKey = KeyCode.LeftShift;
     Vector2 currentInput;
     Vector3 currentMovement;
-    bool isSprinting => canSprint && Input.GetKey(sprintKey);
-    bool isMoving => Input.GetAxis("Horizontal") != 0 || Input.GetAxis("Vertical") != 0;
+    bool isSprinting => canSprint && Input.GetKey(sprintKey);    
     bool canSprint = true;
     bool canMove = true;
     int currentHealth = 10;
@@ -34,8 +31,6 @@ public class PlayerController : MonoBehaviour
         controller = gameObject.GetComponent<CharacterController>();
         tf = gameObject.GetComponent<Transform>();
         Cursor.lockState = CursorLockMode.Locked;
-        //Cursor.visible = false;
-        //cursorImage.enabled = true;
     }
 
     void Update() {
@@ -48,12 +43,12 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    public bool TakeSwordHit() {
+    public void TakeSwordHit() {
         currentHealth -= swordHitValue;
         if(currentHealth > 0){
-            return false; // Change UI
+            // Change UI
         } else {
-            return true; // Kill player / handle game over
+            // Kill player / handle game over
         }
     }
 
@@ -76,9 +71,6 @@ public class PlayerController : MonoBehaviour
         controller.Move(currentMovement * Time.deltaTime);
     }
 
-    void DetermineInteractionType(GameObject hitObj) {
-
-    }
     void HandleInteraction() {
         float rayDistance = 50f;
         Ray ray = mainCamera.ViewportPointToRay(new Vector3(0.5f, 0.5f, 0f)); // Ray from center of the viewport
@@ -108,9 +100,7 @@ public class PlayerController : MonoBehaviour
     }
     public void ClearHighlighted() {
         if (lastHighlightedObject != null) {
-            //lastHighlightedObject.GetComponent<MeshRenderer>().material = originalMat;
             lastHighlightedObject = null;
-            //cursorImage.enabled = true;
             cursorImage.sprite = normalCursor;
         }
     }
@@ -120,7 +110,6 @@ public class PlayerController : MonoBehaviour
             lastHighlightedObject = hitObj;
         }
         if(hitObj.tag != "Untagged") {
-            //cursorImage.enabled = true;
             cursorImage.sprite = interactCursor;
         }
     }

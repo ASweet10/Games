@@ -81,7 +81,7 @@ public class RollyBallSimple : MonoBehaviour
         //Used to limit acceleration/turning in midair, can find other uses
         */
         if(isGrounded) {
-            rb.drag = dragOnGround;
+            rb.linearDamping = dragOnGround;
             if(Mathf.Abs(speedInput) > 0)
             {
                 rb.AddForce(transform.forward * speedInput);
@@ -99,7 +99,7 @@ public class RollyBallSimple : MonoBehaviour
             visual.rotation = Quaternion.LookRotation(forward, hit.normal);
             */
         } else {
-            rb.drag = 0.1f;
+            rb.linearDamping = 0.1f;
             rb.AddForce(Vector3.up * gravityForce * 100f);
         }
     }
